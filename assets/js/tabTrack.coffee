@@ -16,7 +16,7 @@ takeSnapshot = (action) ->
         time = Date.now()
         for tab in tabs
           tab.type = 'tab'
-          tab.inActiveWindow = tab.windowId == window.id
+		  #tab.inActiveWindow = tab.windowId == window.id
           tab.snapshotAction = action
           tab.domain = URI(tab.url).domain()
           tab.urlHash = CryptoJS.MD5(tab.url).toString()
@@ -37,9 +37,9 @@ takeSnapshot = (action) ->
         TabInfo.db.insert(saveTabs)
         console.log '========== END   SNAPSHOT =========='
 
-trackFocus = (windowId, tabId) ->
+trackFocus = (action, windowId, tabId) ->
   console.log 'activated - ' + windowId + ':' + tabId
-  data = {type: 'focus', windowId: windowId, tabId: tabId, time: Date.now()}
+  data = {type: 'focus', windowId: windowId, tabId: tabId, action: action, time: Date.now()}
   TabInfo.db.insert(data)
 
 trackRepalce = (removedTabId, addedTabId) ->
@@ -54,19 +54,22 @@ chrome.tabs.onUpdated.addListener (tabId, changeInfo, tab) ->
   takeSnapshot('updated:' + changeInfo.status)
 
 chrome.tabs.onAttached.addListener (tabId, attachInfo) ->
-  takeSnapshot('attached')
+  takeSnapshot('attached:' + attachInfo.newWindowId + ':' + attachInfo.newPosition)
+
+chrome.tabs.onMoved.addListener (tabId, moveInfo) ->
+  takeSnapshot('moved:' + moveInfo.windowId + ':' + moveInfo.fromIndex + ':' + moveInfo.toIndex)
 
 chrome.tabs.onRemoved.addListener (tabId, removeInfo) ->
-  takeSnapshot('removed')
+  takeSnapshot('removed:' + removeInfo.windowId + ':' + removeInfo.isWindowClosing)
 
 chrome.tabs.onActivated.addListener (activeInfo) ->
-  trackFocus(activeInfo.windowId, activeInfo.tabId)
+  trackFocus('tabChange', activeInfo.windowId, activeInfo.tabId)
 
 chrome.windows.onFocusChanged.addListener (windowId) ->
     chrome.tabs.query {active: true, windowId: windowId, currentWindow: true}, (tabs) ->
       if tabs.length > 0
         tab = tabs[0]
-        trackFocus(windowId, tab.id)
+        trackFocus('windowChange', windowId, tab.id)
 
 chrome.tabs.onReplaced.addListener (addedTabId, removedTabId) ->
   trackReplace(removedTabId, addedTabId)
