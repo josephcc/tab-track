@@ -23,7 +23,7 @@ $('.download.tabs').click () ->
 	csv = objects2csv(tabs, attributes)
 	downloadCsv('tabLogs', csv)
 
-$('.download.focus').click () ->
+$('.download.focuses').click () ->
 	#tabId time windowId
 	focuses = TabInfo.db({type: 'focus'}).get()
 	attributes = ['action', 'windowId', 'tabId', 'time']

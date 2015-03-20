@@ -15,8 +15,12 @@ html(lang='en')
   body
     .container
       .jumbotron
-        h1
-          | Tab Tracker
+        .row(style='display: flex; align-items: center;')
+          .col-sm-4
+            image(src='/dist/img/tabtacular.png', style='width: 100%;')
+          .col-sm-8
+            h1
+              | Tab Tracker
         br
         p
           | Thank you for participating in the browser tab usage study, please
@@ -28,13 +32,13 @@ html(lang='en')
         p
           .row.text-center
             .col-sm-4
-              button.download.tabs.btn.btn-success(type='button')
+              button.download.tabs.btn.btn-lg.btn-success(type='button')
                 | Download tabs data
             .col-sm-4
-              button.download.focus.btn.btn-success(type='button')
+              button.download.focuses.btn.btn-lg.btn-success(type='button')
                 | Download focus data
             .col-sm-4
-              button.database.kill.btn.btn-danger(type='button')
+              button.database.kill.btn.btn-lg.btn-danger(type='button')
                 | Clear database
 
       // Placed at the end of the document so the pages load faster
