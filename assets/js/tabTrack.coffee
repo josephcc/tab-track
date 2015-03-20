@@ -1,7 +1,3 @@
-###
-# This file keeps track of the Google searches a person performs in the background. It saves them
-# in the local storage in the "queries" variable
-###
 
 console.log 'start'
 takeSnapshot = (action) ->
@@ -19,8 +15,8 @@ takeSnapshot = (action) ->
 		  #tab.inActiveWindow = tab.windowId == window.id
           tab.snapshotAction = action
           tab.domain = URI(tab.url).domain()
-          tab.urlHash = CryptoJS.MD5(tab.url).toString()
-          tab.domainHash = CryptoJS.MD5(tab.domain).toString()
+          tab.urlHash = CryptoJS.MD5(tab.url).toString(CryptoJS.enc.Base64)
+          tab.domainHash = CryptoJS.MD5(tab.domain).toString(CryptoJS.enc.Base64)
           tab.snapshotId = snapshotId
           tab.time = time
           
