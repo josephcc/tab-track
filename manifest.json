@@ -1,0 +1,27 @@
+{
+  "manifest_version": 2,
+
+  "name": "Tab Tracker",
+  "description": "Track tab usage",
+  "version": "0.1",
+  "permissions": [
+    "tabs",
+    "activeTab",
+    "storage",
+    "webNavigation",
+	"sessions"
+  ],
+  "background": {
+    "page": "dist/html/background.html",
+    "persistent": true
+  },
+  "browser_action": {
+    "default_icon": "dist/img/structify_medium.png"
+  },
+  "icons": {
+    "16": "dist/img/structify_small.png",
+    "48": "dist/img/structify_medium.png",
+    "128": "dist/img/structify.png"
+  }
+
+}
