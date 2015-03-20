@@ -15,6 +15,7 @@ takeSnapshot = (action) ->
         console.log tabs
         time = Date.now()
         for tab in tabs
+          tab.type = 'tab'
           tab.inActiveWindow = tab.windowId == window.id
           tab.snapshotAction = action
           tab.domain = URI(tab.url).domain()
@@ -28,6 +29,7 @@ takeSnapshot = (action) ->
           delete tab.selected
           delete tab.highlighted
           delete tab.incognito
+          delete tab.title
 
           console.log tab
           saveTabs.push tab
@@ -37,9 +39,13 @@ takeSnapshot = (action) ->
 
 trackFocus = (windowId, tabId) ->
   console.log 'activated - ' + windowId + ':' + tabId
+  data = {type: 'focus', windowId: windowId, tabId: tabId, time: Date.now()}
+  TabInfo.db.insert(data)
 
 trackRepalce = (removedTabId, addedTabId) ->
   console.log 'replaced - ' + addedTabId + ':' + removedTabId
+#  data = {type: 'replace', from: removedTabId, to: addedTabId, time: Date.now()}
+#  TabInfo.db.insert(data)
 
 chrome.tabs.onUpdated.addListener (tabId, changeInfo, tab) ->
   if not changeInfo.status?
