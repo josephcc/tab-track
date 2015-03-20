@@ -1,0 +1,54 @@
+doctype html
+html(lang='en')
+  head
+      meta(charset='utf-8')
+      meta(http-equiv='X-UA-Compatible', content='IE=edge')
+      meta(name='viewport', content='width=device-width, initial-scale=1')
+      meta(name='description', content='')
+      meta(name='author', content='')
+      //link(rel='icon', href='../../favicon.ico')
+      title Tab Tracker
+      // Bootstrap core CSS
+      link(href='/vendor/bootstrap/dist/css/bootstrap.min.css', rel='stylesheet')
+
+
+  body
+    .container
+      .jumbotron
+        h1
+          | Tab Tracker
+        br
+        p
+          | Thank you for participating in the browser tab usage study, please
+          | click the first two button to download your tab usage logs. Before
+          | submitting the logs, you can review them in Excel and blackout
+          | columns that you do not wish to share with us. Please send your
+          | logs to josephcc@cmu.edu . Thank you!
+        br
+        p
+          .row.text-center
+            .col-sm-4
+              button.download.tabs.btn.btn-success(type='button')
+                | Download tabs data
+            .col-sm-4
+              button.download.focus.btn.btn-success(type='button')
+                | Download focus data
+            .col-sm-4
+              button.database.kill.btn.btn-danger(type='button')
+                | Clear database
+
+      // Placed at the end of the document so the pages load faster
+      script(src='/dist/js/uuid.js')
+      script(src='/dist/vendor/jquery/dist/jquery.min.js')
+      script(src='/dist/vendor/bootstrap/dist/js/bootstrap.min.js')
+      //Angular Scripts
+      script(src="/dist/vendor/underscore/underscore-min.js")
+      script(src='/dist/vendor/uri.js/src/URI.min.js')
+      
+      //Scripts to access the tab information
+      script(src='/dist/vendor/taffydb/taffy-min.js')
+      script(src='/dist/js/trackAPI.js')
+      
+      //Finally Load the Angular Controller
+      script(src='/dist/js/controller.js')
+
