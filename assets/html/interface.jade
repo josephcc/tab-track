@@ -10,6 +10,7 @@ html(lang='en')
       title Tab Tracker
       // Bootstrap core CSS
       link(href='/vendor/bootstrap/dist/css/bootstrap.min.css', rel='stylesheet')
+      link(href='/dist/css/tipsy.css', rel='stylesheet')
 
 
   body
@@ -40,11 +41,16 @@ html(lang='en')
             .col-sm-4
               button.database.kill.btn.btn-lg.btn-danger(type='button')
                 | Clear database
+      .row
+        .col-sm-12
+          .render_container(style='width: 100%; overflow: scroll;')
 
       // Placed at the end of the document so the pages load faster
       script(src='/dist/js/uuid.js')
       script(src='/dist/vendor/jquery/dist/jquery.min.js')
+      script(src='/dist/js/jquery.tipsy.js')
       script(src='/dist/vendor/bootstrap/dist/js/bootstrap.min.js')
+      script(src='/dist/vendor/d3/d3.min.js')
       //Angular Scripts
       script(src="/dist/vendor/underscore/underscore-min.js")
       script(src='/dist/vendor/uri.js/src/URI.min.js')
@@ -52,6 +58,7 @@ html(lang='en')
       //Scripts to access the tab information
       script(src='/dist/vendor/taffydb/taffy-min.js')
       script(src='/dist/js/trackAPI.js')
+
       
       //Finally Load the Angular Controller
       script(src='/dist/js/controller.js')

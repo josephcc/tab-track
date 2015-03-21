@@ -9,6 +9,7 @@
   ],
   "license": "MIT",
   "dependencies": {
+    "d3": "*",
     "underscore": "*",
 	"cryptojslib": "*",
     "jquery": "~2.1.3",
