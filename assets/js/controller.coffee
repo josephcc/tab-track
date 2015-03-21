@@ -30,11 +30,14 @@ $('.download.focuses').click () ->
   csv = objects2csv(focuses, attributes)
   downloadCsv('focusLogs', csv)
 
-$('.database.kill').click () ->
-  #console.log "KILL DB"
-  #TabInfo.clearDB()
-  #alert 'database deleted'
+$('.render').click () ->
   render()
+
+
+$('.database.kill').click () ->
+  console.log "KILL DB"
+  #TabInfo.clearDB()
+  alert 'database deleted'
 
 plot =
     height: 750
@@ -42,31 +45,11 @@ plot =
     timelineHeight: 30
     timelineMargin: 4
     timeTickWidth: 100
-    seamWidth: 0.1
+    seamWidth: 0.15
     color: d3.scale.category20()
 
-render = () ->
-  console.log ' -- BEGIN RENDER -- '
 
-  tabs = TabInfo.db({type: 'tab'}).get()
-  snapshots = _.groupBy(tabs, (tab) -> tab.snapshotId)
-  snapshots = _.values(snapshots)
-  _.sortBy(snapshots, (snapshot) -> snapshot.time)
-  transitions = ([snapshot, snapshots[idx+1]] for snapshot, idx in snapshots)
-  transitions.pop()
-
-  plot.start = tabs[0].time
-  plot.end = tabs[tabs.length - 1].time
-  plot.width = (plot.end - plot.start) / 5000
-  plot.timeScale = plot.width / (plot.end - plot.start)
-
-  d3.select('svg').remove()
-  plot.svg = d3.select(".render_container")
-      .append("svg")
-      .attr('width', plot.width)
-      .attr('height', plot.height)
-
-
+_render_timeline = () ->
   ticks = (tick for tick in [plot.timeTickWidth..(plot.width - plot.timeTickWidth)] by plot.timeTickWidth)
   plot.svg.selectAll('line.timeline')
     .data([0])
@@ -130,7 +113,10 @@ render = () ->
     .attr('x', (tick, index) -> return tick + 4)
     .attr('y', (tick, index) -> return plot.timelineHeight - 2)
 
+_render_tabs = (snapshots) ->
   tabs = []
+  transitions = ([snapshot, snapshots[idx+1]] for snapshot, idx in snapshots)
+  transitions.pop()
   for transition in transitions
     from = transition[0]
     to = transition[1]
@@ -165,8 +151,32 @@ render = () ->
     gravity: 'n', 
     html: false, 
     title: () ->
-      return this.__data__.url
+      return "[" + this.__data__.id + "] " + this.__data__.url
   )
+
+
+render = () ->
+  tabs = TabInfo.db({type: 'tab'}).get()
+  snapshots = _.groupBy(tabs, (tab) -> tab.snapshotId)
+  snapshots = _.values(snapshots)
+  _.sortBy(snapshots, (snapshot) -> snapshot.time)
+
+  plot.start = tabs[0].time
+  plot.end = tabs[tabs.length - 1].time
+  plot.width = (plot.end - plot.start) / 5000
+  plot.timeScale = plot.width / (plot.end - plot.start)
+
+  console.log ' -- BEGIN RENDER -- '
+
+  d3.select('svg').remove()
+  plot.svg = d3.select(".render_container")
+      .append("svg")
+      .attr('width', plot.width)
+      .attr('height', plot.height)
+
+
+  _render_timeline()
+  _render_tabs(snapshots)
 
   tabs = TabInfo.db({type: 'tab'}).get()
   tabs = _.groupBy(tabs, (tab) -> tab.id)
@@ -176,4 +186,6 @@ render = () ->
   transitions.pop()
 
   console.log ' -- END   RENDER -- '
+
+  $('.render_container').scrollLeft(plot.width)
 
