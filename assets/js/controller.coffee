@@ -154,6 +154,58 @@ _render_tabs = (snapshots) ->
       return "[" + this.__data__.id + "] " + this.__data__.url
   )
 
+_render_focus_bubbles = () ->
+  focuses = TabInfo.db({type: 'focus'}).get()
+  _focuses = []
+  for focus in focuses
+    tabs = TabInfo.db({type: 'tab', id: focus.tabId}).get()
+    for tab in tabs
+      tab.diff = Math.abs(focus.time - tab.time)
+    tabs = _.sortBy(tabs, 'diff')
+    if tabs.length > 0
+      tab = tabs[0]
+      focus.tab = tab
+      focus.cy = tab.index * plot.tabHeight + plot.timelineHeight + plot.timelineMargin + plot.tabHeight/2
+      focus.cx = (focus.time - plot.start) * plot.timeScale - plot.seamWidth
+      _focuses.push focus
+  focuses = _focuses
+
+  plot.svg.selectAll('circle.focus')
+      .data(focuses)
+      .enter()
+      .append('circle')
+      .attr('class', 'focus')
+      .attr('stroke-width', 1)
+      .attr('r', (focus, index) ->
+        if focus.windowId == -1
+          return 0.25
+        return plot.tabHeight/16
+      )
+      .attr('cx', (focus, index) ->
+        return focus.cx
+      )
+      .attr('cy', (focus, index) ->
+        return focus.cy
+      )
+      .attr('stroke', (focus, index) -> 
+        if focus.windowId == -1
+          return 'black'
+        return 'white'
+      )
+      .attr('fill', (focus, index) ->
+        return 'rgba(0,0,0,0.0)'
+      )
+  $('svg circle.focus').tipsy( 
+    gravity: 'n', 
+    html: false, 
+    title: () ->
+      return this.__data__.action + ", " + this.__data__.windowId + ", " + this.__data__.tabId + ", " + this.__data__.time
+  )
+  return focuses
+
+_render_focus_path = (focuses) ->
+  1 == 1
+
 
 render = () ->
   tabs = TabInfo.db({type: 'tab'}).get()
@@ -174,16 +226,10 @@ render = () ->
       .attr('width', plot.width)
       .attr('height', plot.height)
 
-
   _render_timeline()
   _render_tabs(snapshots)
-
-  tabs = TabInfo.db({type: 'tab'}).get()
-  tabs = _.groupBy(tabs, (tab) -> tab.id)
-
-  focuses = TabInfo.db({type: 'focus'}).get()
-  transitions = ([focus, focuses[idx+1]] for focus, idx in focuses)
-  transitions.pop()
+  focuses = _render_focus_bubbles()
+  _render_focus_path(focuses)
 
   console.log ' -- END   RENDER -- '
 
