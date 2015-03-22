@@ -72,8 +72,8 @@ please = (id) ->
 
 plot =
     height: 750
-    tabHeight: 25
-    timelineHeight: 30
+    tabHeight: 30
+    timelineHeight: 35
     timelineMargin: 4
     timeTickWidth: 100
     seamWidth: 0.05
@@ -196,7 +196,28 @@ _render_tabs = (snapshots) ->
         return plot.color(tab.id)
       )
 
-  $('svg rect.tab').tipsy( 
+  searches = _.filter(tabs, (tab) -> tab.url.indexOf('google.com') >= 0)
+  plot.svg.selectAll('rect.search')
+      .data(searches)
+      .enter()
+      .append('rect')
+      .attr('class', 'search')
+      .attr('height', plot.tabHeight)
+      .attr('stroke-width', 0)
+      .attr('width', (tab, index) -> 
+        getWidthForTimeRange(tab.time, tab.endTime) + (plot.seamWidth * 2)
+      )
+      .attr('x', (tab, index) ->
+        getXForTime(tab.time) - plot.seamWidth
+      )
+      .attr('y', (tab, index) ->
+        getYForIndex(tab.index)
+      )
+      .attr('fill', (tab, index) ->
+        return 'url(#diagonalHatch)'
+      )
+
+  $('svg rect.tab, svg rect.search').tipsy( 
     gravity: 'n', 
     html: false, 
     title: () ->
@@ -355,6 +376,18 @@ _setup_svg = () ->
         .append('svg:path')
           .attr('d', (d) -> d.path )
           .attr('fill', (d) -> 'black')
+  
+  plot.defs.append('defs')
+  .append('pattern')
+    .attr('id', 'diagonalHatch')
+    .attr('patternUnits', 'userSpaceOnUse')
+    .attr('width', 4)
+    .attr('height', 4)
+  .append('path')
+    .attr('d', 'M-1,1 l2,-2 M0,4 l4,-4 M3,5 l2,-2')
+    .attr('fill', 'red')
+    .attr('stroke', 'hotpink')
+    .attr('stroke-width', 1);
 
 render = () ->
   tabs = TabInfo.db({type: 'tab'}).get()
