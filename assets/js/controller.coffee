@@ -81,7 +81,17 @@ plot =
 #    color: please
     color: hashStringToColor
     scaleX: 1.0
+    scaleMin: 0.01
+    scaleMax: 100
     translateX: 0.0
+    inFocusColor: 'white'
+    outFocusColor: 'black'
+    tabLoadingColor: 'black'
+
+plot.focusLineFunction = d3.svg.line()
+   .x((d) -> (d.x * plot.scaleX) + plot.translateX)
+   .y((d) -> d.y)
+   .interpolate("step-after")
 
 
 _render_timeline = () ->
@@ -182,7 +192,7 @@ _render_tabs = (snapshots) ->
       )
       .attr('fill', (tab, index) ->
         if tab.status == 'loading'
-          return 'black'
+          return plot.tabLoadingColor
         return plot.color(tab.id)
       )
 
@@ -193,8 +203,8 @@ _render_tabs = (snapshots) ->
       return "[" + this.__data__.id + "] " + this.__data__.url
   )
 
-getTabForIdTime = (tid, time) ->
-  tabs = TabInfo.db({type: 'tab', id: tid}).get()
+getTabForIdTime = (tabId, time) ->
+  tabs = TabInfo.db({type: 'tab', id: tabId}).get()
   for tab in tabs
     tab.diff = Math.abs(time - tab.time)
   tabs = _.sortBy(tabs, 'diff')
@@ -203,14 +213,14 @@ getTabForIdTime = (tid, time) ->
   return null
 
 orderTimeRange = (time1, time2) ->
-  return Math.min(time1, time2), Math.max(time1, time2)
+  return [Math.min(time1, time2), Math.max(time1, time2)]
 
-getTabsForIdTimeRange = (tid, time1, time2) ->
-  time1, time2 = orderTimeRange(time1, time2)
-  tab1 = getTabForIdTime(tid, time1)
-  tab2 = getTabForIdTime(tid, time2)
-  if tab1 and tab2 and tab1 != tab2
-    tabs = TabInfo.db({type: 'tab', id: tid, time: {'>=': tab1.time, '<=': tab2.time}}).get()
+getTabsForIdTimeRange = (tabId, time1, time2) ->
+  [time1, time2] = orderTimeRange(time1, time2)
+  tab1 = getTabForIdTime(tabId, time1)
+  tab2 = getTabForIdTime(tabId, time2)
+  if tab1 and tab2
+    tabs = TabInfo.db({type: 'tab', id: tabId, time: {'>=': tab1.time, '<=': tab2.time}}).get()
     return tabs
   return null
 
@@ -224,19 +234,40 @@ getYForIndex = (index) ->
   index * plot.tabHeight + plot.timelineHeight + plot.timelineMargin 
 
 getWidthForTimeRange = (time1, time2) ->
-  time1, time2 = orderTimeRange(time1, time2)
+  [time1, time2] = orderTimeRange(time1, time2)
   return getXForTime(time2) - getXForTime(time1)
 
 _render_focus_bubbles = () ->
   focuses = TabInfo.db({type: 'focus'}).get()
+  focuses = _.sortBy(focuses, 'time')
   _focuses = []
+  paths = []
   for focus in focuses
   	tab = getTabForIdTime(focus.tabId, focus.time)
 	  if tab
       focus.cy = getYForIndex(tab.index) + (plot.tabHeight / 2)
       focus.cx = getXForTime(focus.time)
       _focuses.push focus
+      paths.push {x: focus.cx, y:focus.cy, active: focus.windowId >= 0}
   focuses = _focuses
+
+  paths = ([path, paths[idx+1]] for path, idx in paths)
+  paths.pop()
+
+  plot._svg.selectAll('path.focus')
+    .data(paths)
+    .enter()
+    .append('path')
+    .attr('class', 'focus')
+    .attr('d', (path) -> plot.focusLineFunction(path))
+    .attr('stroke', (path) -> 
+      if path[0].active
+        return plot.inFocusColor
+      return plot.outFocusColor
+    )
+    .attr('stroke-width', 0.5 * Math.sqrt(plot.scaleX) * 1.5)
+    .attr('fill', 'none')
+    .attr('stroke-dasharray', '2,1')
 
   plot._svg.selectAll('circle.focus')
       .data(focuses)
@@ -245,9 +276,7 @@ _render_focus_bubbles = () ->
       .attr('class', 'focus')
       .attr('stroke-width', 1)
       .attr('r', (focus, index) ->
-        if focus.windowId == -1
-          return 0.25
-        return plot.tabHeight/12
+        return plot.tabHeight/16
       )
       .attr('cx', (focus, index) ->
         return (focus.cx * plot.scaleX) + plot.translateX
@@ -257,17 +286,12 @@ _render_focus_bubbles = () ->
       )
       .attr('stroke', (focus, index) -> 
         if focus.windowId == -1
-          return 'black'
-        return 'white'
+          return plot.outFocusColor
+        return plot.inFocusColor
       )
       .attr('fill', (focus, index) ->
         return 'rgba(0,0,0,0.0)'
       )
-
-  return focuses
-
-_render_focus_path = (focuses) ->
-  1 == 1
 
 tick = () ->
   plot._svg.selectAll('circle.focus')
@@ -286,6 +310,10 @@ tick = () ->
     plot._svg.selectAll('text.timeTick')
       .attr('font-size', plot.scaleX * plot.timelineHeight * 0.9 / 2)
 
+  plot._svg.selectAll('path.focus')
+    .attr('d', (path) -> plot.focusLineFunction(path))
+    .attr('stroke-width', 0.5 * Math.sqrt(plot.scaleX) * 1.5)
+
 _setup_svg = () ->
   d3.select('svg').remove()
   plot._svg = d3.select(".render_container")
@@ -301,7 +329,7 @@ _setup_svg = () ->
     tick()
 
   zoom = d3.behavior.zoom()
-    .scaleExtent([0.01, 25])
+    .scaleExtent([plot.scaleMin, plot.scaleMax])
     .on("zoom", zoomed)
   plot._svg.call(zoom)
 
@@ -344,8 +372,8 @@ render = () ->
   _setup_svg()
   _render_timeline()
   _render_tabs(snapshots)
-  focuses = _render_focus_bubbles()
-  _render_focus_path(focuses)
+#  _render_focus_path()
+  _render_focus_bubbles()
 
   console.log ' -- END   RENDER -- '
 
