@@ -76,7 +76,7 @@ plot =
     timelineHeight: 30
     timelineMargin: 4
     timeTickWidth: 100
-    seamWidth: 0.15
+    seamWidth: 0.05
 #    color: d3.scale.category20()
     color: hashStringToColor
 #    color: please
@@ -93,9 +93,11 @@ _render_timeline = () ->
     .attr('class', 'timeline')
     .attr('x1', (tick, index) -> return 0)
     .attr('y1', (tick, index) -> plot.timelineHeight)
-    .attr('x2', (tick, index) -> return plot.width)
+    .attr('x2', (tick, index) -> return plot.width - 5)
     .attr('y2', (tick, index) -> plot.timelineHeight)
     .attr('stroke', 'black')
+    .attr('marker-start', 'url(#marker_stub)')
+    .attr('marker-end', 'url(#marker_arrow)')
 
   plot.svg.selectAll('line.timeTick')
     .data(ticks)
@@ -216,7 +218,7 @@ _render_focus_bubbles = () ->
       .attr('r', (focus, index) ->
         if focus.windowId == -1
           return 0.25
-        return plot.tabHeight/16
+        return plot.tabHeight/12
       )
       .attr('cx', (focus, index) ->
         return (focus.cx * plot.scaleX) + plot.translateX
@@ -255,20 +257,7 @@ tick = () ->
     plot._svg.selectAll('text.timeTick')
       .attr('font-size', plot.scaleX * plot.timelineHeight * 0.9 / 2)
 
-render = () ->
-  tabs = TabInfo.db({type: 'tab'}).get()
-  snapshots = _.groupBy(tabs, (tab) -> tab.snapshotId)
-  snapshots = _.values(snapshots)
-  _.sortBy(snapshots, (snapshot) -> snapshot.time)
-
-  plot.start = tabs[0].time
-  plot.end = tabs[tabs.length - 1].time
-  plot.width = (plot.end - plot.start) / 5000
-  plot.timeScale = plot.width / (plot.end - plot.start)
-
-  console.log ' -- BEGIN RENDER -- '
-
-
+_setup_svg = () ->
   d3.select('svg').remove()
   plot._svg = d3.select(".render_container")
       .append("svg")
@@ -282,18 +271,55 @@ render = () ->
     plot.svg.attr("transform", "translate(" + d3.event.translate[0] + ", 0 )scale(" + d3.event.scale + ", 1)")
     tick()
 
+  zoom = d3.behavior.zoom()
+    .scaleExtent([0.01, 25])
+    .on("zoom", zoomed)
+  plot._svg.call(zoom)
+
+  plot.defs = plot.svg.append('svg:defs')
+  markers = [
+    { id: 0, name: 'circle', path: 'M 0, 0  m -10, 0  a 10,10 0 1,0 20,0  a 10,10 0 1,0 -20,0', viewbox: '-6 -6 12 12' },
+    { id: 1, name: 'square', path: 'M 0,0 m -10,-10 L 10,-10 L 10,10 L -10,10 Z', viewbox: '-10 -10 20 20' },
+    { id: 2, name: 'arrow', path: 'M 0,0 m -10,-10 L 10,0 L -10,10 Z', viewbox: '-10 -10 20 20' },
+    { id: 2, name: 'stub', path: 'M 0,0 m -1,-10 L 1,-10 L 1,10 L -1,10 Z', viewbox: '-1 -10 2 20' },
+  ]
+  marker = plot.defs.selectAll('marker')
+      .data(markers)
+      .enter()
+      .append('svg:marker')
+        .attr('id', (d) -> 'marker_' + d.name)
+        .attr('markerHeight', 5)
+        .attr('markerWidth', 5)
+        .attr('markerUnits', 'strokeWidth')
+        .attr('orient', 'auto')
+        .attr('refX', 0)
+        .attr('refY', 0)
+        .attr('viewBox', (d) -> d.viewbox )
+        .append('svg:path')
+          .attr('d', (d) -> d.path )
+          .attr('fill', (d) -> 'black')
+
+render = () ->
+  tabs = TabInfo.db({type: 'tab'}).get()
+  snapshots = _.groupBy(tabs, (tab) -> tab.snapshotId)
+  snapshots = _.values(snapshots)
+  _.sortBy(snapshots, (snapshot) -> snapshot.time)
+
+  plot.start = tabs[0].time
+  plot.end = tabs[tabs.length - 1].time
+  plot.width = Math.max((plot.end - plot.start) / 5000, $('.render_container').width())
+  plot.timeScale = plot.width / (plot.end - plot.start)
+
+  console.log ' -- BEGIN RENDER -- '
+
+  _setup_svg()
+
   
   _render_timeline()
   _render_tabs(snapshots)
   focuses = _render_focus_bubbles()
   _render_focus_path(focuses)
 
-
-
-  zoom = d3.behavior.zoom()
-    .scaleExtent([0.01, 25])
-    .on("zoom", zoomed)
-  plot._svg.call(zoom)
 
 
   console.log ' -- END   RENDER -- '
