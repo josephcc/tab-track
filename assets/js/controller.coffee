@@ -84,7 +84,7 @@ plot =
     scaleMin: 0.01
     scaleMax: 100
     translateX: 0.0
-    inFocusColor: 'white'
+    inFocusColor: '#fafafa'
     outFocusColor: 'black'
     tabLoadingColor: 'black'
 
@@ -240,10 +240,10 @@ getTabsForIdTimeRange = (tabId, time1, time2) ->
   [time1, time2] = orderTimeRange(time1, time2)
   tab1 = getTabForIdTime(tabId, time1)
   tab2 = getTabForIdTime(tabId, time2)
-  if tab1 and tab2
+  if tab1? and tab2?
     tabs = TabInfo.db({type: 'tab', id: tabId, time: {'>=': tab1.time, '<=': tab2.time}}).get()
     return tabs
-  return null
+  return []
 
 getXForTime = (time) ->
   (time - plot.start) * plot.timeScale
@@ -262,15 +262,30 @@ _render_focus_bubbles = () ->
   focuses = TabInfo.db({type: 'focus'}).get()
   focuses = _.sortBy(focuses, 'time')
   _focuses = []
-  paths = []
   for focus in focuses
-  	tab = getTabForIdTime(focus.tabId, focus.time)
-	  if tab
+    tab = getTabForIdTime(focus.tabId, focus.time)
+    if tab
       focus.cy = getYForIndex(tab.index) + (plot.tabHeight / 2)
       focus.cx = getXForTime(focus.time)
       _focuses.push focus
-      paths.push {x: focus.cx, y:focus.cy, active: focus.windowId >= 0}
   focuses = _focuses
+
+  transitions = ([focus, focuses[idx+1]] for focus, idx in focuses)
+  transitions.pop()
+  paths = []
+  for transition in transitions
+    focus1 = transition[0]
+    focus2 = transition[1]
+    tabs = getTabsForIdTimeRange(focus1.tabId, focus1.time, focus2.time)
+    if tabs.length == 1
+      tabs = [$.extend(true, {},tabs[0]), $.extend(true, {},tabs[0])]
+    if tabs.length >= 2
+      tabs[0].time = focus1.time
+      tabs[tabs.length-1].time = focus2.time
+    for tab in tabs
+      cy = getYForIndex(tab.index) + (plot.tabHeight / 2)
+      cx = getXForTime(tab.time)
+      paths.push {x: cx, y: cy, active: focus1.windowId >= 0}
 
   paths = ([path, paths[idx+1]] for path, idx in paths)
   paths.pop()
