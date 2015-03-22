@@ -78,8 +78,8 @@ plot =
     timeTickWidth: 100
     seamWidth: 0.05
 #    color: d3.scale.category20()
-    color: hashStringToColor
 #    color: please
+    color: hashStringToColor
     scaleX: 1.0
     translateX: 0.0
 
@@ -116,7 +116,7 @@ _render_timeline = () ->
     .append('text')
     .attr('class', 'dateTick')
     .text((tick, index) ->
-      unixtime = (parseInt(tick) / plot.timeScale) + plot.start
+      unixtime = getTimeForX(parseInt(tick))
       date = new Date()
       date.setTime(unixtime)
       dateString = date.toLocaleDateString("en-US")
@@ -142,7 +142,7 @@ _render_timeline = () ->
     .append('text')
     .attr('class', 'timeTick')
     .text((tick, index) ->
-      unixtime = (parseInt(tick) / plot.timeScale) + plot.start
+      unixtime = getTimeForX(parseInt(tick))
       date = new Date()
       date.setTime(unixtime)
       dateString = date.getHours() + ":" + date.getMinutes() + ":" + date.getSeconds()
@@ -172,13 +172,13 @@ _render_tabs = (snapshots) ->
       .attr('height', plot.tabHeight)
       .attr('stroke-width', 0)
       .attr('width', (tab, index) -> 
-          return (tab.endTime - tab.time) * plot.timeScale + (plot.seamWidth*2)
+        getWidthForTimeRange(tab.time, tab.endTime) + (plot.seamWidth * 2)
       )
       .attr('x', (tab, index) ->
-          return (tab.time - plot.start) * plot.timeScale - plot.seamWidth
+        getXForTime(tab.time) - plot.seamWidth
       )
       .attr('y', (tab, index) ->
-          return tab.index * plot.tabHeight + plot.timelineHeight + plot.timelineMargin
+        getYForIndex(tab.index)
       )
       .attr('fill', (tab, index) ->
         if tab.status == 'loading'
@@ -193,19 +193,48 @@ _render_tabs = (snapshots) ->
       return "[" + this.__data__.id + "] " + this.__data__.url
   )
 
+getTabForIdTime = (tid, time) ->
+  tabs = TabInfo.db({type: 'tab', id: tid}).get()
+  for tab in tabs
+    tab.diff = Math.abs(time - tab.time)
+  tabs = _.sortBy(tabs, 'diff')
+  if tabs.length > 0
+    return tabs[0]
+  return null
+
+orderTimeRange = (time1, time2) ->
+  return Math.min(time1, time2), Math.max(time1, time2)
+
+getTabsForIdTimeRange = (tid, time1, time2) ->
+  time1, time2 = orderTimeRange(time1, time2)
+  tab1 = getTabForIdTime(tid, time1)
+  tab2 = getTabForIdTime(tid, time2)
+  if tab1 and tab2 and tab1 != tab2
+    tabs = TabInfo.db({type: 'tab', id: tid, time: {'>=': tab1.time, '<=': tab2.time}}).get()
+    return tabs
+  return null
+
+getXForTime = (time) ->
+  (time - plot.start) * plot.timeScale
+
+getTimeForX = (x) ->
+  (x / plot.timeScale) + plot.start
+
+getYForIndex = (index) ->
+  index * plot.tabHeight + plot.timelineHeight + plot.timelineMargin 
+
+getWidthForTimeRange = (time1, time2) ->
+  time1, time2 = orderTimeRange(time1, time2)
+  return getXForTime(time2) - getXForTime(time1)
+
 _render_focus_bubbles = () ->
   focuses = TabInfo.db({type: 'focus'}).get()
   _focuses = []
   for focus in focuses
-    tabs = TabInfo.db({type: 'tab', id: focus.tabId}).get()
-    for tab in tabs
-      tab.diff = Math.abs(focus.time - tab.time)
-    tabs = _.sortBy(tabs, 'diff')
-    if tabs.length > 0
-      tab = tabs[0]
-      focus.tab = tab
-      focus.cy = tab.index * plot.tabHeight + plot.timelineHeight + plot.timelineMargin + plot.tabHeight/2
-      focus.cx = (focus.time - plot.start) * plot.timeScale - plot.seamWidth
+  	tab = getTabForIdTime(focus.tabId, focus.time)
+	  if tab
+      focus.cy = getYForIndex(tab.index) + (plot.tabHeight / 2)
+      focus.cx = getXForTime(focus.time)
       _focuses.push focus
   focuses = _focuses
 
@@ -313,14 +342,10 @@ render = () ->
   console.log ' -- BEGIN RENDER -- '
 
   _setup_svg()
-
-  
   _render_timeline()
   _render_tabs(snapshots)
   focuses = _render_focus_bubbles()
   _render_focus_path(focuses)
-
-
 
   console.log ' -- END   RENDER -- '
 
