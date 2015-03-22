@@ -39,6 +39,37 @@ $('.database.kill').click () ->
   #TabInfo.clearDB()
   alert 'database deleted'
 
+
+lighten = (c, d) ->
+  c = c * (1-d) + (255 * d)
+  return Math.round(c)
+
+hashStringToColor = (str) ->
+  hash = CryptoJS.MD5("" + str)
+  r = (hash.words[0] & 0xFF0000) >> 16
+  g = (hash.words[0] & 0x00FF00) >> 8
+  b = hash.words[0] & 0x0000FF
+  r = lighten(r, 0.4)
+  g = lighten(g, 0.4)
+  b = lighten(b, 0.4)
+  return 'rgba(' + r + ", " + g + ", " + b + ', 1.0)'
+#  return "#" + ("0" + r.toString(16)).substr(-2) + ("0" + g.toString(16)).substr(-2) + ("0" + b.toString(16)).substr(-2);
+
+
+
+
+pleaseColors = Please.make_color({
+    saturation: 1.0,
+    colors_returned: 100,
+    format: 'hex',
+    full_random: true
+})
+
+please = (id) ->
+  hash = CryptoJS.MD5("" + id)
+  id = Math.abs(hash.words[0])
+  pleaseColors[id%100]
+
 plot =
     height: 750
     tabHeight: 25
@@ -46,7 +77,9 @@ plot =
     timelineMargin: 4
     timeTickWidth: 100
     seamWidth: 0.15
-    color: d3.scale.category20()
+#    color: d3.scale.category20()
+    color: hashStringToColor
+#    color: please
     scaleX: 1.0
     translateX: 0.0
 
