@@ -47,6 +47,8 @@ plot =
     timeTickWidth: 100
     seamWidth: 0.15
     color: d3.scale.category20()
+    scaleX: 1.0
+    translateX: 0.0
 
 
 _render_timeline = () ->
@@ -73,7 +75,7 @@ _render_timeline = () ->
     .attr('y2', (tick, index) -> plot.timelineHeight)
     .attr('stroke', 'black')
 
-  plot.svg.selectAll('text.dateTick')
+  plot._svg.selectAll('text.dateTick')
     .data(ticks)
     .enter()
     .append('text')
@@ -87,6 +89,7 @@ _render_timeline = () ->
     )
     .attr('x', (tick, index) -> return tick + 4)
     .attr('y', (tick, index) -> return plot.timelineHeight/2 - 2)
+    .attr('font-size', plot.timelineHeight * 0.9 / 2)
 
   plot.svg.selectAll('line.timeTick')
     .data(ticks)
@@ -98,7 +101,7 @@ _render_timeline = () ->
     .attr('x2', (tick, index) -> return tick)
     .attr('y2', (tick, index) -> plot.timelineHeight)
     .attr('stroke', 'black')
-  plot.svg.selectAll('text.timeTick')
+  plot._svg.selectAll('text.timeTick')
     .data(ticks)
     .enter()
     .append('text')
@@ -112,6 +115,7 @@ _render_timeline = () ->
     )
     .attr('x', (tick, index) -> return tick + 4)
     .attr('y', (tick, index) -> return plot.timelineHeight - 2)
+    .attr('font-size', plot.timelineHeight * 0.9 / 2)
 
 _render_tabs = (snapshots) ->
   tabs = []
@@ -170,7 +174,7 @@ _render_focus_bubbles = () ->
       _focuses.push focus
   focuses = _focuses
 
-  plot.svg.selectAll('circle.focus')
+  plot._svg.selectAll('circle.focus')
       .data(focuses)
       .enter()
       .append('circle')
@@ -182,7 +186,7 @@ _render_focus_bubbles = () ->
         return plot.tabHeight/16
       )
       .attr('cx', (focus, index) ->
-        return focus.cx
+        return (focus.cx * plot.scaleX) + plot.translateX
       )
       .attr('cy', (focus, index) ->
         return focus.cy
@@ -195,17 +199,28 @@ _render_focus_bubbles = () ->
       .attr('fill', (focus, index) ->
         return 'rgba(0,0,0,0.0)'
       )
-  $('svg circle.focus').tipsy( 
-    gravity: 'n', 
-    html: false, 
-    title: () ->
-      return this.__data__.action + ", " + this.__data__.windowId + ", " + this.__data__.tabId + ", " + this.__data__.time
-  )
+
   return focuses
 
 _render_focus_path = (focuses) ->
   1 == 1
 
+tick = () ->
+  plot._svg.selectAll('circle.focus')
+      .attr('cx', (focus, index) ->
+        return (focus.cx * plot.scaleX) + plot.translateX
+      )
+  plot.svg.selectAll('line.timeTick')
+    .attr('stroke-width', 1.0 / plot.scaleX)
+  plot._svg.selectAll('text.dateTick')
+    .attr('x', (tick, index) -> return (tick * plot.scaleX) + plot.translateX + 4)
+  plot._svg.selectAll('text.timeTick')
+    .attr('x', (tick, index) -> return (tick * plot.scaleX) + plot.translateX + 4)
+  if plot.scaleX < 1.0
+    plot._svg.selectAll('text.dateTick')
+      .attr('font-size', plot.scaleX * plot.timelineHeight * 0.9 / 2)
+    plot._svg.selectAll('text.timeTick')
+      .attr('font-size', plot.scaleX * plot.timelineHeight * 0.9 / 2)
 
 render = () ->
   tabs = TabInfo.db({type: 'tab'}).get()
@@ -220,16 +235,33 @@ render = () ->
 
   console.log ' -- BEGIN RENDER -- '
 
+
   d3.select('svg').remove()
-  plot.svg = d3.select(".render_container")
+  plot._svg = d3.select(".render_container")
       .append("svg")
       .attr('width', plot.width)
       .attr('height', plot.height)
 
+  plot.svg = plot._svg.append("g")
+  zoomed = () ->
+    plot.scaleX = d3.event.scale
+    plot.translateX = d3.event.translate[0]
+    plot.svg.attr("transform", "translate(" + d3.event.translate[0] + ", 0 )scale(" + d3.event.scale + ", 1)")
+    tick()
+
+  
   _render_timeline()
   _render_tabs(snapshots)
   focuses = _render_focus_bubbles()
   _render_focus_path(focuses)
+
+
+
+  zoom = d3.behavior.zoom()
+    .scaleExtent([0.01, 25])
+    .on("zoom", zoomed)
+  plot._svg.call(zoom)
+
 
   console.log ' -- END   RENDER -- '
 
