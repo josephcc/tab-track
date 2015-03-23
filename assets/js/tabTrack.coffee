@@ -5,10 +5,10 @@ takeSnapshot = (action) ->
     chrome.windows.getCurrent null, (window) ->
         console.log '========== BEGIN SNAPSHOT =========='
         console.log 'track - ' + action
-        console.log window
+		#console.log window
         saveTabs = []
         snapshotId = generateUUID()
-        console.log tabs
+		#console.log tabs
         time = Date.now()
         for tab in tabs
           tab.type = 'tab'
@@ -27,7 +27,7 @@ takeSnapshot = (action) ->
           delete tab.incognito
           delete tab.title
 
-          console.log tab
+		  #console.log tab
           saveTabs.push tab
 
         TabInfo.db.insert(saveTabs)
