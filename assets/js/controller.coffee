@@ -87,8 +87,11 @@ plot =
     inFocusColor: '#fafafa'
     outFocusColor: 'black'
     tabLoadingColor: 'black'
-    branchWidth: 5
+    branchMinWidth: 5
     branchColor: 'red'
+    branchStrokeWidth: 1.2
+    focusPathWidth: 1.1
+    focusBubbleRadius: 2.0
 
 plot.focusLineFunction = d3.svg.line()
    .x((d) -> (d.x * plot.scaleX) + plot.translateX)
@@ -187,9 +190,10 @@ _render_branches = (snapshots) ->
     .enter()
     .append('line')
     .attr('class', 'branch_down')
+    .attr('stroke-width', plot.branchStrokeWidth)
     .attr('x1', (branch, index) ->
       [tab, from] = branch
-      getXForTime(tab.time) - plot.seamWidth - plot.branchWidth
+      getXForTime(tab.time) - plot.seamWidth -  Math.max(plot.branchMinWidth, getWidthForTimeRange(from.time, tab.time))
     )
     .attr('y1', (branch, index) ->
       [tab, from] = branch
@@ -197,7 +201,7 @@ _render_branches = (snapshots) ->
     )
     .attr('x2', (branch, index) ->
       [tab, from] = branch
-      getXForTime(tab.time) - plot.seamWidth - plot.branchWidth
+      getXForTime(tab.time) - plot.seamWidth -  Math.max(plot.branchMinWidth, getWidthForTimeRange(from.time, tab.time))
     )
     .attr('y2', (branch, index) ->
       [tab, from] = branch
@@ -209,9 +213,10 @@ _render_branches = (snapshots) ->
     .enter()
     .append('line')
     .attr('class', 'branch_right')
+    .attr('stroke-width', plot.branchStrokeWidth)
     .attr('x1', (branch, index) ->
       [tab, from] = branch
-      getXForTime(tab.time) - plot.seamWidth - plot.branchWidth
+      getXForTime(tab.time) - plot.seamWidth -  Math.max(plot.branchMinWidth, getWidthForTimeRange(from.time, tab.time))
     )
     .attr('y1', (branch, index) ->
       [tab, from] = branch
@@ -225,7 +230,7 @@ _render_branches = (snapshots) ->
       [tab, from] = branch
       plot.tabHeight * (tab.index - from.index + 1) + getYForIndex(from.index) - (plot.tabHeight/2)
     )
-    .attr('marker-end', 'url(#marker_arrow)')
+    .attr('marker-end', 'url(#branch_marker_arrow)')
     .attr('stroke', plot.branchColor)
 
 
@@ -368,7 +373,7 @@ _render_focus = () ->
         return plot.inFocusColor
       return plot.outFocusColor
     )
-    .attr('stroke-width', 0.5 * Math.sqrt(plot.scaleX) * 1.5)
+    .attr('stroke-width', plot.focusPathWidth)
     .attr('fill', 'none')
     .attr('stroke-dasharray', '2,1')
 
@@ -378,9 +383,7 @@ _render_focus = () ->
       .append('circle')
       .attr('class', 'focus')
       .attr('stroke-width', 1)
-      .attr('r', (focus, index) ->
-        return plot.tabHeight/16
-      )
+      .attr('r', plot.focusBubbleRadius)
       .attr('cx', (focus, index) ->
         return (focus.cx * plot.scaleX) + plot.translateX
       )
@@ -418,7 +421,7 @@ tick = () ->
 
   plot._svg.selectAll('path.focus')
     .attr('d', (path) -> plot.focusLineFunction(path))
-    .attr('stroke-width', 0.5 * Math.sqrt(plot.scaleX) * 1.5)
+
   plot.svg.selectAll('rect.search')
       .attr('x', (tab, index) ->
         getXForTime(tab.time) - plot.seamWidth
@@ -433,17 +436,17 @@ tick = () ->
   plot._svg.selectAll('line.branch_down')
     .attr('x1', (branch, index) ->
       [tab, from] = branch
-      scaleX(getXForTime(tab.time) - plot.seamWidth) - plot.branchWidth 
+      scaleX(getXForTime(tab.time) - plot.seamWidth) - Math.max(plot.branchMinWidth, getWidthForTimeRange(from.time, tab.time))
     )
     .attr('x2', (branch, index) ->
       [tab, from] = branch
-      scaleX(getXForTime(tab.time) - plot.seamWidth) - plot.branchWidth
+      scaleX(getXForTime(tab.time) - plot.seamWidth) - Math.max(plot.branchMinWidth, getWidthForTimeRange(from.time, tab.time))
     )
 
   plot._svg.selectAll('line.branch_right')
     .attr('x1', (branch, index) ->
       [tab, from] = branch
-      scaleX(getXForTime(tab.time) - plot.seamWidth) - plot.branchWidth
+      scaleX(getXForTime(tab.time) - plot.seamWidth) - Math.max(plot.branchMinWidth, getWidthForTimeRange(from.time, tab.time))
     )
     .attr('x2', (branch, index) ->
       [tab, from] = branch
@@ -491,6 +494,22 @@ _setup_svg = () ->
         .append('svg:path')
           .attr('d', (d) -> d.path )
           .attr('fill', (d) -> 'black')
+  marker = plot.defs.selectAll('marker.branch')
+      .data(markers)
+      .enter()
+      .append('svg:marker')
+        .attr('id', (d) -> 'branch_marker_' + d.name)
+        .attr('class', plot.branchColor)
+        .attr('markerHeight', 5)
+        .attr('markerWidth', 5)
+        .attr('markerUnits', 'strokeWidth')
+        .attr('orient', 'auto')
+        .attr('refX', 0)
+        .attr('refY', 0)
+        .attr('viewBox', (d) -> d.viewbox )
+        .append('svg:path')
+          .attr('d', (d) -> d.path )
+          .attr('fill', plot.branchColor)
   
   plot.defs.append('defs')
   .append('pattern')
