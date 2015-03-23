@@ -177,6 +177,7 @@ _render_branches = (snapshots) ->
     newTabIds = _.difference(_.keys(to), _.keys(from))
     newTabs = _.map(newTabIds, (tabId) -> to[tabId])
     newBranchTabs = _.filter(newTabs, (tab) -> from[tab.openerTabId]?)
+    newBranchTabs = _.filter(newBranchTabs, (tab) -> tab.url.indexOf('chrome://newtab') != 0)
     newBranchTabs = _.map(newBranchTabs, (tab) -> [tab, from[tab.openerTabId]])
     branches = branches.concat newBranchTabs
 
