@@ -193,7 +193,7 @@ _render_branches = (snapshots) ->
     .attr('stroke-width', plot.branchStrokeWidth)
     .attr('x1', (branch, index) ->
       [tab, from] = branch
-      getXForTime(tab.time) - plot.seamWidth -  Math.max(plot.branchMinWidth, getWidthForTimeRange(from.time, tab.time))
+      getXForTime(tab.time) - plot.seamWidth -  Math.max(plot.branchMinWidth, getWidthForTimeRange(from.endTime, tab.time))
     )
     .attr('y1', (branch, index) ->
       [tab, from] = branch
@@ -201,7 +201,7 @@ _render_branches = (snapshots) ->
     )
     .attr('x2', (branch, index) ->
       [tab, from] = branch
-      getXForTime(tab.time) - plot.seamWidth -  Math.max(plot.branchMinWidth, getWidthForTimeRange(from.time, tab.time))
+      getXForTime(tab.time) - plot.seamWidth -  Math.max(plot.branchMinWidth, getWidthForTimeRange(from.endTime, tab.time))
     )
     .attr('y2', (branch, index) ->
       [tab, from] = branch
@@ -216,7 +216,7 @@ _render_branches = (snapshots) ->
     .attr('stroke-width', plot.branchStrokeWidth)
     .attr('x1', (branch, index) ->
       [tab, from] = branch
-      getXForTime(tab.time) - plot.seamWidth -  Math.max(plot.branchMinWidth, getWidthForTimeRange(from.time, tab.time))
+      getXForTime(tab.time) - plot.seamWidth -  Math.max(plot.branchMinWidth, getWidthForTimeRange(from.endTime, tab.time))
     )
     .attr('y1', (branch, index) ->
       [tab, from] = branch
@@ -436,17 +436,17 @@ tick = () ->
   plot._svg.selectAll('line.branch_down')
     .attr('x1', (branch, index) ->
       [tab, from] = branch
-      scaleX(getXForTime(tab.time) - plot.seamWidth) - Math.max(plot.branchMinWidth, getWidthForTimeRange(from.time, tab.time))
+      scaleX(getXForTime(tab.time) - plot.seamWidth) - Math.max(plot.branchMinWidth, getWidthForTimeRange(from.endTime, tab.time))
     )
     .attr('x2', (branch, index) ->
       [tab, from] = branch
-      scaleX(getXForTime(tab.time) - plot.seamWidth) - Math.max(plot.branchMinWidth, getWidthForTimeRange(from.time, tab.time))
+      scaleX(getXForTime(tab.time) - plot.seamWidth) - Math.max(plot.branchMinWidth, getWidthForTimeRange(from.endTime, tab.time))
     )
 
   plot._svg.selectAll('line.branch_right')
     .attr('x1', (branch, index) ->
       [tab, from] = branch
-      scaleX(getXForTime(tab.time) - plot.seamWidth) - Math.max(plot.branchMinWidth, getWidthForTimeRange(from.time, tab.time))
+      scaleX(getXForTime(tab.time) - plot.seamWidth) - Math.max(plot.branchMinWidth, getWidthForTimeRange(from.endTime, tab.time))
     )
     .attr('x2', (branch, index) ->
       [tab, from] = branch
