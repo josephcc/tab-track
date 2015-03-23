@@ -87,12 +87,13 @@ plot =
     inFocusColor: '#fafafa'
     outFocusColor: 'black'
     tabLoadingColor: 'black'
+    branchWidth: 5
+    branchColor: 'red'
 
 plot.focusLineFunction = d3.svg.line()
    .x((d) -> (d.x * plot.scaleX) + plot.translateX)
    .y((d) -> d.y)
    .interpolate("step-after")
-
 
 _render_timeline = () ->
   ticks = (tick for tick in [plot.timeTickWidth..(plot.width - plot.timeTickWidth)] by plot.timeTickWidth)
@@ -162,6 +163,71 @@ _render_timeline = () ->
     .attr('y', (tick, index) -> return plot.timelineHeight - 2)
     .attr('font-size', plot.timelineHeight * 0.9 / 2)
 
+_render_branches = (snapshots) ->
+  #[[tab, tab, tab], ...]
+  snapshots = _.map(snapshots, (snapshot) -> _.object(_.map(snapshot, (tab) -> [tab.id, tab])))
+  #[{tabid: tab, tabid: tab, tabid: tab], ...]
+
+  transitions = ([snapshot, snapshots[idx+1]] for snapshot, idx in snapshots)
+  transitions.pop()
+  branches = []
+  for transition in transitions
+    from = transition[0]
+    to = transition[1]
+    newTabIds = _.difference(_.keys(to), _.keys(from))
+    newTabs = _.map(newTabIds, (tabId) -> to[tabId])
+    newBranchTabs = _.filter(newTabs, (tab) -> from[tab.openerTabId]?)
+    newBranchTabs = _.map(newBranchTabs, (tab) -> [tab, from[tab.openerTabId]])
+    branches = branches.concat newBranchTabs
+
+
+  plot._svg.selectAll('line.branch_down')
+    .data(branches)
+    .enter()
+    .append('line')
+    .attr('class', 'branch_down')
+    .attr('x1', (branch, index) ->
+      [tab, from] = branch
+      getXForTime(tab.time) - plot.seamWidth - plot.branchWidth
+    )
+    .attr('y1', (branch, index) ->
+      [tab, from] = branch
+      getYForIndex(from.index) + plot.tabHeight
+    )
+    .attr('x2', (branch, index) ->
+      [tab, from] = branch
+      getXForTime(tab.time) - plot.seamWidth - plot.branchWidth
+    )
+    .attr('y2', (branch, index) ->
+      [tab, from] = branch
+      plot.tabHeight * (tab.index - from.index + 1) + getYForIndex(from.index) - (plot.tabHeight/2)
+    )
+    .attr('stroke', plot.branchColor)
+  plot._svg.selectAll('line.branch_right')
+    .data(branches)
+    .enter()
+    .append('line')
+    .attr('class', 'branch_right')
+    .attr('x1', (branch, index) ->
+      [tab, from] = branch
+      getXForTime(tab.time) - plot.seamWidth - plot.branchWidth
+    )
+    .attr('y1', (branch, index) ->
+      [tab, from] = branch
+      plot.tabHeight * (tab.index - from.index + 1) + getYForIndex(from.index) - (plot.tabHeight/2)
+    )
+    .attr('x2', (branch, index) ->
+      [tab, from] = branch
+      getXForTime(tab.time) - plot.seamWidth - 1
+    )
+    .attr('y2', (branch, index) ->
+      [tab, from] = branch
+      plot.tabHeight * (tab.index - from.index + 1) + getYForIndex(from.index) - (plot.tabHeight/2)
+    )
+    .attr('marker-end', 'url(#marker_arrow)')
+    .attr('stroke', plot.branchColor)
+
+
 _render_tabs = (snapshots) ->
   tabs = []
   transitions = ([snapshot, snapshots[idx+1]] for snapshot, idx in snapshots)
@@ -196,7 +262,7 @@ _render_tabs = (snapshots) ->
         return plot.color(tab.id)
       )
 
-  searches = _.filter(tabs, (tab) -> tab.url.indexOf('google.com') >= 0)
+  searches = _.filter(tabs, (tab) -> tab.url.indexOf('www.google.com') >= 0)
   plot.svg.selectAll('rect.search')
       .data(searches)
       .enter()
@@ -258,7 +324,7 @@ getWidthForTimeRange = (time1, time2) ->
   [time1, time2] = orderTimeRange(time1, time2)
   return getXForTime(time2) - getXForTime(time1)
 
-_render_focus_bubbles = () ->
+_render_focus = () ->
   focuses = TabInfo.db({type: 'focus'}).get()
   focuses = _.sortBy(focuses, 'time')
   _focuses = []
@@ -329,6 +395,9 @@ _render_focus_bubbles = () ->
         return 'rgba(0,0,0,0.0)'
       )
 
+scaleX = (x) ->
+  (x * plot.scaleX) + plot.translateX 
+
 tick = () ->
   plot._svg.selectAll('circle.focus')
       .attr('cx', (focus, index) ->
@@ -337,9 +406,9 @@ tick = () ->
   plot.svg.selectAll('line.timeTick')
     .attr('stroke-width', 1.0 / plot.scaleX)
   plot._svg.selectAll('text.dateTick')
-    .attr('x', (tick, index) -> return (tick * plot.scaleX) + plot.translateX + 4)
+    .attr('x', (tick, index) -> return scaleX(tick) + 4)
   plot._svg.selectAll('text.timeTick')
-    .attr('x', (tick, index) -> return (tick * plot.scaleX) + plot.translateX + 4)
+    .attr('x', (tick, index) -> return scaleX(tick) + 4)
   if plot.scaleX < 1.0
     plot._svg.selectAll('text.dateTick')
       .attr('font-size', plot.scaleX * plot.timelineHeight * 0.9 / 2)
@@ -349,6 +418,36 @@ tick = () ->
   plot._svg.selectAll('path.focus')
     .attr('d', (path) -> plot.focusLineFunction(path))
     .attr('stroke-width', 0.5 * Math.sqrt(plot.scaleX) * 1.5)
+  plot.svg.selectAll('rect.search')
+      .attr('x', (tab, index) ->
+        getXForTime(tab.time) - plot.seamWidth
+      )
+      .attr('y', (tab, index) ->
+        getYForIndex(tab.index)
+      )
+      .attr('fill', (tab, index) ->
+        return 'url(#diagonalHatch)'
+      )
+
+  plot._svg.selectAll('line.branch_down')
+    .attr('x1', (branch, index) ->
+      [tab, from] = branch
+      scaleX(getXForTime(tab.time) - plot.seamWidth) - plot.branchWidth 
+    )
+    .attr('x2', (branch, index) ->
+      [tab, from] = branch
+      scaleX(getXForTime(tab.time) - plot.seamWidth) - plot.branchWidth
+    )
+
+  plot._svg.selectAll('line.branch_right')
+    .attr('x1', (branch, index) ->
+      [tab, from] = branch
+      scaleX(getXForTime(tab.time) - plot.seamWidth) - plot.branchWidth
+    )
+    .attr('x2', (branch, index) ->
+      [tab, from] = branch
+      scaleX(getXForTime(tab.time) - plot.seamWidth) - 1
+    )
 
 _setup_svg = () ->
   d3.select('svg').remove()
@@ -420,8 +519,8 @@ render = () ->
   _setup_svg()
   _render_timeline()
   _render_tabs(snapshots)
-#  _render_focus_path()
-  _render_focus_bubbles()
+  _render_focus()
+  _render_branches(snapshots)
 
   console.log ' -- END   RENDER -- '
 
