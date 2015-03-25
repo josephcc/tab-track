@@ -10,21 +10,51 @@ objects2csv = (objects, attributes) ->
   return csvData.join('\n')
 
 downloadCsv = (filename, csv) ->
-  a = document.createElement('a')
-  a.href = 'data:attachment/csv,' + encodeURI(csv)
-  a.target ='_blank'
-  a.download = filename + '.csv'
-  a.click()
+  onInitFs = (fs) ->
+    console.log('Opened file system: ' + fs.name)
+    fs.root.getFile(generateUUID() + '.csv', {create: true, exclusive: true}, (fileEntry) ->
+      fileEntry.createWriter (writer) ->
+        writer.onwriteend = (e) ->
+          console.log('write done')
+          console.log fileEntry.toURL()
+          a = document.createElement('a')
+          a.href = fileEntry.toURL()
+          a.target ='_blank'
+          a.download = 'tabLogs.csv'
+          a.click()
+        blob = new Blob([csv], {type: 'text/csv'})
+        writer.write(blob)
+      , errorHandler
+    )
+  window.webkitRequestFileSystem(window.TEMPORARY , 50*1024*1024, onInitFs, errorHandler);
+
+
+errorHandler = (e) ->
+  msg = ''
+
+  switch (e.code)
+    when FileError.QUOTA_EXCEEDED_ERR
+      msg = 'QUOTA_EXCEEDED_ERR'
+    when FileError.NOT_FOUND_ERR
+      msg = 'NOT_FOUND_ERR'
+    when FileError.SECURITY_ERR
+      msg = 'SECURITY_ERR'
+    when FileError.INVALID_MODIFICATION_ERR
+      msg = 'INVALID_MODIFICATION_ERR'
+    when FileError.INVALID_STATE_ERR
+      msg = 'INVALID_STATE_ERR'
+    else
+      msg = 'Unknown Error'
+
+  console.log('Error: ' + msg)
 
 $('.download.tabs').click () ->
-  #domain url urlHash domainHash index id windowId status snapshotAction time
   tabs = TabInfo.db({type: 'tab'}).get()
   attributes = ['snapshotId', 'windowId', 'id', 'openerTabId', 'index', 'status', 'snapshotAction', 'domain', 'url', 'domainHash', 'urlHash', 'favIconUrl', 'time']
   csv = objects2csv(tabs, attributes)
   downloadCsv('tabLogs', csv)
 
 $('.download.focuses').click () ->
-  #tabId time windowId
   focuses = TabInfo.db({type: 'focus'}).get()
   attributes = ['action', 'windowId', 'tabId', 'time']
   csv = objects2csv(focuses, attributes)
@@ -32,7 +62,6 @@ $('.download.focuses').click () ->
 
 $('.render').click () ->
   render()
-
 
 $('.database.kill').click () ->
   console.log "KILL DB"
@@ -54,9 +83,6 @@ hashStringToColor = (str) ->
   b = lighten(b, 0.4)
   return 'rgba(' + r + ", " + g + ", " + b + ', 1.0)'
 #  return "#" + ("0" + r.toString(16)).substr(-2) + ("0" + g.toString(16)).substr(-2) + ("0" + b.toString(16)).substr(-2);
-
-
-
 
 pleaseColors = Please.make_color({
     saturation: 1.0,
