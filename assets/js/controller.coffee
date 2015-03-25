@@ -7,26 +7,43 @@ objects2csv = (objects, attributes) ->
     for attribute in attributes
       row.push ("" + object[attribute]).replace(/\\/g, "\\\\").replace(/"/g, '\\"')
     csvData.push '"' + row.join('","') + '"'
-  return csvData.join('\n')
+  return csvData.join('\n') + '\n'
 
-downloadCsv = (filename, csv) ->
+downloadCsv = (filename, csv, spillfile) ->
   onInitFs = (fs) ->
     console.log('Opened file system: ' + fs.name)
-    fs.root.getFile(generateUUID() + '.csv', {create: true, exclusive: true}, (fileEntry) ->
-      fileEntry.createWriter (writer) ->
-        writer.onwriteend = (e) ->
-          console.log('write done')
-          console.log fileEntry.toURL()
-          a = document.createElement('a')
-          a.href = fileEntry.toURL()
-          a.target ='_blank'
-          a.download = 'tabLogs.csv'
-          a.click()
-        blob = new Blob([csv], {type: 'text/csv'})
-        writer.write(blob)
-      , errorHandler
-    )
-  window.webkitRequestFileSystem(window.TEMPORARY , 50*1024*1024, onInitFs, errorHandler);
+    fsFilename = generateUUID() + '.csv'
+    fs.root.getFile(spillfile, {create: true}, (spillFileEntry) ->
+
+      spillFileEntry.copyTo fs.root, fsFilename, () ->
+
+        fs.root.getFile(fsFilename, {create: false}, (fileEntry) ->
+          fileEntry.createWriter (writer) ->
+            writer.onwriteend = (e) ->
+              console.log('write done')
+              console.log fileEntry.toURL()
+              a = document.createElement('a')
+              a.href = fileEntry.toURL()
+              a.target ='_blank'
+              a.download = filename
+              a.click()
+            blob = new Blob([csv], {type: 'text/csv'})
+            writer.seek(writer.length)
+            writer.write(blob)
+
+            setTimeout( () ->
+              console.log 'removing tmp download file'
+              fs.root.getFile(fsFilename, {create: false}, (fileEntry) ->
+                fileEntry.remove(() ->
+                  console.log('File removed.')
+                , errorHandler)
+              , errorHandler)
+            , 10000)
+
+          , errorHandler)
+
+      , errorHandler)
+  window.webkitRequestFileSystem(window.PERSISTENT, 50*1024*1024, onInitFs, errorHandler);
 
 
 errorHandler = (e) ->
@@ -52,20 +69,20 @@ $('.download.tabs').click () ->
   tabs = TabInfo.db({type: 'tab'}).get()
   attributes = ['snapshotId', 'windowId', 'id', 'openerTabId', 'index', 'status', 'snapshotAction', 'domain', 'url', 'domainHash', 'urlHash', 'favIconUrl', 'time']
   csv = objects2csv(tabs, attributes)
-  downloadCsv('tabLogs', csv)
+  downloadCsv('tabLogs.csv', csv, '_tabLogs.csv')
 
 $('.download.focuses').click () ->
   focuses = TabInfo.db({type: 'focus'}).get()
   attributes = ['action', 'windowId', 'tabId', 'time']
   csv = objects2csv(focuses, attributes)
-  downloadCsv('focusLogs', csv)
+  downloadCsv('focusLogs.csv', csv, '_focusLogs.csv')
 
 $('.render').click () ->
   render()
 
 $('.database.kill').click () ->
   console.log "KILL DB"
-  #TabInfo.clearDB()
+  TabInfo.clearDB()
   alert 'database deleted'
 
 
