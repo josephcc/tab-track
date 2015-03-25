@@ -55,7 +55,7 @@ window.TabInfo = (() ->
     template: {}
     onDBChange: () ->
       size = TabInfo.db().get().length
-      if size >= 1250
+      if size >= 1000
         console.log 'persisting to file'
         old = TabInfo.db().order('time asec').limit(250).get()
 
