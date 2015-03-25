@@ -311,7 +311,7 @@ _render_tabs = (snapshots) ->
         return plot.color(tab.id)
       )
 
-  searches = _.filter(tabs, (tab) -> tab.url.indexOf('www.google.com') >= 0)
+  searches = _.filter(tabs, (tab) -> tab.url.indexOf('www.google.com') >= 0 and tab.url.indexOf('q=') >= 0)
   plot.svg.selectAll('rect.search')
       .data(searches)
       .enter()
@@ -342,7 +342,9 @@ _render_tabs = (snapshots) ->
 getTabForIdTime = (tabId, time) ->
   tabs = TabInfo.db({type: 'tab', id: tabId}).get()
   for tab in tabs
-    tab.diff = Math.abs(time - tab.time)
+    tab.diff = time - tab.time
+
+  tabs = _.filter(tabs, (tab) -> tab.diff >= 500)
   tabs = _.sortBy(tabs, 'diff')
   if tabs.length > 0
     return tabs[0]
@@ -441,6 +443,12 @@ _render_focus = () ->
       .attr('fill', (focus, index) ->
         return 'rgba(0,0,0,0.0)'
       )
+
+  $('svg circle.focus').tipsy( 
+    gravity: 'n', 
+    html: false, 
+    title: () -> "[" + this.__data__.windowId + ':' + this.__data__.tabId + "]"
+  )
 
 scaleX = (x) ->
   (x * plot.scaleX) + plot.translateX 
