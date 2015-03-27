@@ -38,7 +38,7 @@ trackFocus = (action, windowId, tabId) ->
   data = {type: 'focus', windowId: windowId, tabId: tabId, action: action, time: Date.now()}
   TabInfo.db.insert(data)
 
-trackRepalce = (removedTabId, addedTabId) ->
+trackReplace = (removedTabId, addedTabId) ->
   console.log 'replaced - ' + addedTabId + ':' + removedTabId
 #  data = {type: 'replace', from: removedTabId, to: addedTabId, time: Date.now()}
 #  TabInfo.db.insert(data)
@@ -70,3 +70,7 @@ chrome.windows.onFocusChanged.addListener (windowId) ->
 chrome.tabs.onReplaced.addListener (addedTabId, removedTabId) ->
   trackReplace(removedTabId, addedTabId)
 
+chrome.webNavigation.onCreatedNavigationTarget.addListener (details) ->
+  console.log 'nav: ' + details.sourceTabId + ' -> ' + details.tabId
+  data = {type: 'nav', from: details.sourceTabId, to: details.tabId, time: Date.now()}
+  TabInfo.db.insert(data)

@@ -71,6 +71,13 @@ window.TabInfo = (() ->
           focusCsv = objects2csv(focuses, attributes)
           persistToFile('_focusLogs.csv', focusCsv)
 
+
+        navs = _.filter(old, (e) -> e.type == 'nav')
+        if navs.length > 0
+          attributes = ['from', 'to', 'time']
+          navCsv = objects2csv(navs, attributes)
+          persistToFile('_navLogs.csv', navCsv)
+
         TabInfo.db(old).remove()
 
       chrome.storage.local.set {'tabs': {db: this, updateId: updateID}}
@@ -110,6 +117,13 @@ window.TabInfo = (() ->
           console.log('File removed.')
         , errorHandler)
       , errorHandler)
+
+      fs.root.getFile('_navLogs.csv', {create: false}, (fileEntry) ->
+        fileEntry.remove(() ->
+          console.log('File removed.')
+        , errorHandler)
+      , errorHandler)
+
 
     , errorHandler)
       

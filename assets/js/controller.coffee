@@ -65,17 +65,21 @@ errorHandler = (e) ->
 
   console.log('Error: ' + msg)
 
-$('.download.tabs').click () ->
+$('.download.all').click () ->
   tabs = TabInfo.db({type: 'tab'}).get()
   attributes = ['snapshotId', 'windowId', 'id', 'openerTabId', 'index', 'status', 'snapshotAction', 'domain', 'url', 'domainHash', 'urlHash', 'favIconUrl', 'time']
   csv = objects2csv(tabs, attributes)
   downloadCsv('tabLogs.csv', csv, '_tabLogs.csv')
 
-$('.download.focuses').click () ->
   focuses = TabInfo.db({type: 'focus'}).get()
   attributes = ['action', 'windowId', 'tabId', 'time']
   csv = objects2csv(focuses, attributes)
   downloadCsv('focusLogs.csv', csv, '_focusLogs.csv')
+
+  navs = TabInfo.db({type: 'nav'}).get()
+  attributes = ['from', 'to', 'time']
+  csv = objects2csv(navs, attributes)
+  downloadCsv('navLogs.csv', csv, '_navLogs.csv')
 
 $('.render').click () ->
   render()
