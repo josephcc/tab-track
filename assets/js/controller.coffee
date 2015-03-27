@@ -560,8 +560,8 @@ _setup_svg = () ->
   .append('path')
     .attr('d', 'M-1,1 l2,-2 M0,4 l4,-4 M3,5 l2,-2')
     .attr('fill', 'red')
-    .attr('stroke', 'hotpink')
-    .attr('stroke-width', 1);
+    .attr('stroke', 'rgba(0,0,0,0.25)')
+    .attr('stroke-width', 1.5)
 
 render = () ->
   tabs = TabInfo.db({type: 'tab'}).get()
