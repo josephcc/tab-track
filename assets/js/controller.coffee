@@ -220,7 +220,6 @@ _render_branches = () ->
     fromTab = getTabForIdTime(branch.from, branch.time)
     toTab = getTabForIdTime(branch.to, branch.time)
     branches.push [toTab, fromTab]
-  console.log branches
 
   plot._svg.selectAll('line.branch_down')
     .data(branches)
@@ -471,17 +470,6 @@ tick = () ->
 
   plot._svg.selectAll('path.focus')
     .attr('d', (path) -> plot.focusLineFunction(path))
-
-  plot.svg.selectAll('rect.search')
-      .attr('x', (tab, index) ->
-        getXForTime(tab.time)
-      )
-      .attr('y', (tab, index) ->
-        getYForIndex(tab.index)
-      )
-      .attr('fill', (tab, index) ->
-        return 'url(#diagonalHatch)'
-      )
 
   plot._svg.selectAll('line.branch_down')
     .attr('x1', (branch, index) ->
