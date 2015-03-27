@@ -213,24 +213,14 @@ _render_timeline = () ->
     .attr('y', (tick, index) -> return plot.timelineHeight - 2)
     .attr('font-size', plot.timelineHeight * 0.9 / 2)
 
-_render_branches = (snapshots) ->
-  #[[tab, tab, tab], ...]
-  snapshots = _.map(snapshots, (snapshot) -> _.object(_.map(snapshot, (tab) -> [tab.id, tab])))
-  #[{tabid: tab, tabid: tab, tabid: tab], ...]
-
-  transitions = ([snapshot, snapshots[idx+1]] for snapshot, idx in snapshots)
-  transitions.pop()
+_render_branches = () ->
+  _branches = TabInfo.db({type: 'nav'}).get()
   branches = []
-  for transition in transitions
-    from = transition[0]
-    to = transition[1]
-    newTabIds = _.difference(_.keys(to), _.keys(from))
-    newTabs = _.map(newTabIds, (tabId) -> to[tabId])
-    newBranchTabs = _.filter(newTabs, (tab) -> from[tab.openerTabId]?)
-    newBranchTabs = _.filter(newBranchTabs, (tab) -> tab.url.indexOf('chrome://') != 0)
-    newBranchTabs = _.map(newBranchTabs, (tab) -> [tab, from[tab.openerTabId]])
-    branches = branches.concat newBranchTabs
-
+  for branch in _branches
+    fromTab = getTabForIdTime(branch.from, branch.time)
+    toTab = getTabForIdTime(branch.to, branch.time)
+    branches.push [toTab, fromTab]
+  console.log branches
 
   plot._svg.selectAll('line.branch_down')
     .data(branches)
@@ -281,7 +271,12 @@ _render_branches = (snapshots) ->
     .attr('stroke', plot.branchColor)
 
 
-_render_tabs = (snapshots) ->
+_render_tabs = () ->
+  tabs = TabInfo.db({type: 'tab'}).get()
+  snapshots = _.groupBy(tabs, (tab) -> tab.snapshotId)
+  snapshots = _.values(snapshots)
+  _.sortBy(snapshots, (snapshot) -> snapshot.time)
+
   tabs = []
   transitions = ([snapshot, snapshots[idx+1]] for snapshot, idx in snapshots)
   transitions.pop()
@@ -348,10 +343,15 @@ getTabForIdTime = (tabId, time) ->
   for tab in tabs
     tab.diff = time - tab.time
 
-  tabs = _.filter(tabs, (tab) -> tab.diff >= 500)
-  tabs = _.sortBy(tabs, 'diff')
-  if tabs.length > 0
-    return tabs[0]
+  _tabs = _.filter(tabs, (tab) -> tab.diff >= 500)
+  _tabs = _.sortBy(_tabs, 'diff')
+  if _tabs.length > 0
+    return _tabs[0]
+  else 
+    tabs = _.each(tabs, (tab) -> tab.diff = Math.abs(tab.diff))
+    tabs = _.sortBy(tabs, 'diff')
+    if tabs.length > 0
+      return tabs[0]
   return null
 
 orderTimeRange = (time1, time2) ->
@@ -479,7 +479,7 @@ tick = () ->
 
   plot.svg.selectAll('rect.search')
       .attr('x', (tab, index) ->
-        getXForTime(tab.time) - plot.seamWidth
+        getXForTime(tab.time)
       )
       .attr('y', (tab, index) ->
         getYForIndex(tab.index)
@@ -582,10 +582,6 @@ _setup_svg = () ->
 
 render = () ->
   tabs = TabInfo.db({type: 'tab'}).get()
-  snapshots = _.groupBy(tabs, (tab) -> tab.snapshotId)
-  snapshots = _.values(snapshots)
-  _.sortBy(snapshots, (snapshot) -> snapshot.time)
-
   plot.start = tabs[0].time
   plot.end = tabs[tabs.length - 1].time
   plot.width = Math.max((plot.end - plot.start) / 5000, $('.render_container').width())
@@ -595,9 +591,9 @@ render = () ->
 
   _setup_svg()
   _render_timeline()
-  _render_tabs(snapshots)
+  _render_tabs()
   _render_focus()
-  _render_branches(snapshots)
+  _render_branches()
 
   console.log ' -- END   RENDER -- '
 
