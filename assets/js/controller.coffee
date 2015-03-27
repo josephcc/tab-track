@@ -430,7 +430,7 @@ _render_focus = () ->
       .attr('stroke-width', 1)
       .attr('r', plot.focusBubbleRadius)
       .attr('cx', (focus, index) ->
-        return (focus.cx * plot.scaleX) + plot.translateX
+        return focus.cx
       )
       .attr('cy', (focus, index) ->
         return focus.cy
@@ -455,9 +455,9 @@ scaleX = (x) ->
 
 tick = () ->
   plot._svg.selectAll('circle.focus')
-      .attr('cx', (focus, index) ->
-        return (focus.cx * plot.scaleX) + plot.translateX
-      )
+    .attr('cx', (focus, index) ->
+      return scaleX(focus.cx)
+    )
   plot.svg.selectAll('line.timeTick')
     .attr('stroke-width', 1.0 / plot.scaleX)
   plot._svg.selectAll('text.dateTick')
@@ -511,6 +511,8 @@ _setup_svg = () ->
       .attr('width', plot.width)
       .attr('height', plot.height)
 
+  plot.scaleX = 1.0
+  plot.translateX = 0.0
   plot.svg = plot._svg.append("g")
   zoomed = () ->
     plot.scaleX = d3.event.scale
