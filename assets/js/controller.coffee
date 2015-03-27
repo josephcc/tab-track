@@ -341,17 +341,12 @@ _render_tabs = () ->
 getTabForIdTime = (tabId, time) ->
   tabs = TabInfo.db({type: 'tab', id: tabId}).get()
   for tab in tabs
-    tab.diff = time - tab.time
+    tab.diff = Math.abs(time - tab.time)
 
-  _tabs = _.filter(tabs, (tab) -> tab.diff >= 500)
-  _tabs = _.sortBy(_tabs, 'diff')
-  if _tabs.length > 0
-    return _tabs[0]
-  else 
-    tabs = _.each(tabs, (tab) -> tab.diff = Math.abs(tab.diff))
-    tabs = _.sortBy(tabs, 'diff')
-    if tabs.length > 0
-      return tabs[0]
+  #_tabs = _.filter(tabs, (tab) -> tab.diff >= 500)
+  tabs = _.sortBy(tabs, 'diff')
+  if tabs.length > 0
+    return tabs[0]
   return null
 
 orderTimeRange = (time1, time2) ->
