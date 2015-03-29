@@ -46,6 +46,9 @@ downloadCsv = (filename, csv, spillfile) ->
   window.webkitRequestFileSystem(window.PERSISTENT, 50*1024*1024, onInitFs, errorHandler);
 
 
+
+
+
 errorHandler = (e) ->
   msg = ''
 
@@ -131,8 +134,8 @@ plot =
     scaleMin: 0.01
     scaleMax: 100
     translateX: 0.0
-    inFocusColor: '#fafafa'
-    outFocusColor: 'black'
+    inFocusColor: 'white'
+    outFocusColor: '#292929'
     tabLoadingColor: 'black'
     branchMinWidth: 5
     branchColor: 'red'
@@ -294,7 +297,7 @@ _render_tabs = () ->
       .attr('class', 'tab')
       .attr('height', plot.tabHeight)
       .attr('stroke-width', 0)
-      .attr('width', (tab, index) -> 
+      .attr('width', (tab, index) ->
         getWidthForTimeRange(tab.time, tab.endTime) + (plot.seamWidth * 2)
       )
       .attr('x', (tab, index) ->
@@ -304,12 +307,31 @@ _render_tabs = () ->
         getYForIndex(tab.index)
       )
       .attr('fill', (tab, index) ->
-        if tab.status == 'loading'
-          return plot.tabLoadingColor
         return plot.color(tab.id)
       )
 
-  searches = _.filter(tabs, (tab) -> tab.url.indexOf('www.google.com') >= 0 and tab.url.indexOf('q=') >= 0)
+  loadings = _.filter(tabs, (tab) -> tab.status == 'loading')
+  plot.svg.selectAll('rect.loading')
+      .data(loadings)
+      .enter()
+      .append('rect')
+      .attr('class', 'loading')
+      .attr('height', plot.tabHeight)
+      .attr('stroke-width', 0)
+      .attr('width', (tab, index) ->
+        getWidthForTimeRange(tab.time, tab.endTime) + (plot.seamWidth * 2)
+      )
+      .attr('x', (tab, index) ->
+        getXForTime(tab.time) - plot.seamWidth
+      )
+      .attr('y', (tab, index) ->
+        getYForIndex(tab.index)
+      )
+      .attr('fill', (tab, index) ->
+        return 'url(#diagonalHatchBlack)'
+      )
+
+  searches = _.filter(tabs, (tab) -> tab.url.indexOf('www.google.com') >= 0 and tab.url.indexOf('q=') >= 0 and tab.url.indexOf('&url=') < 0)
   plot.svg.selectAll('rect.search')
       .data(searches)
       .enter()
@@ -317,7 +339,7 @@ _render_tabs = () ->
       .attr('class', 'search')
       .attr('height', plot.tabHeight)
       .attr('stroke-width', 0)
-      .attr('width', (tab, index) -> 
+      .attr('width', (tab, index) ->
         getWidthForTimeRange(tab.time, tab.endTime) + (plot.seamWidth * 2)
       )
       .attr('x', (tab, index) ->
@@ -327,12 +349,12 @@ _render_tabs = () ->
         getYForIndex(tab.index)
       )
       .attr('fill', (tab, index) ->
-        return 'url(#diagonalHatch)'
+        return 'url(#diagonalHatchWhite)'
       )
 
-  $('svg rect.tab, svg rect.search').tipsy( 
-    gravity: 'n', 
-    html: false, 
+  $('svg rect.tab, svg rect.search, svg rect.loading').tipsy(
+    gravity: 'n',
+    html: false,
     title: () ->
       return "[" + this.__data__.id + "] " + this.__data__.url
   )
@@ -367,7 +389,7 @@ getTimeForX = (x) ->
   (x / plot.timeScale) + plot.start
 
 getYForIndex = (index) ->
-  index * plot.tabHeight + plot.timelineHeight + plot.timelineMargin 
+  index * plot.tabHeight + plot.timelineHeight + plot.timelineMargin
 
 getWidthForTimeRange = (time1, time2) ->
   [time1, time2] = orderTimeRange(time1, time2)
@@ -411,7 +433,7 @@ _render_focus = () ->
     .append('path')
     .attr('class', 'focus')
     .attr('d', (path) -> plot.focusLineFunction(path))
-    .attr('stroke', (path) -> 
+    .attr('stroke', (path) ->
       if path[0].active
         return plot.inFocusColor
       return plot.outFocusColor
@@ -433,7 +455,7 @@ _render_focus = () ->
       .attr('cy', (focus, index) ->
         return focus.cy
       )
-      .attr('stroke', (focus, index) -> 
+      .attr('stroke', (focus, index) ->
         if focus.windowId == -1
           return plot.outFocusColor
         return plot.inFocusColor
@@ -442,14 +464,14 @@ _render_focus = () ->
         return 'rgba(0,0,0,0.0)'
       )
 
-  $('svg circle.focus').tipsy( 
-    gravity: 'n', 
-    html: false, 
+  $('svg circle.focus').tipsy(
+    gravity: 'n',
+    html: false,
     title: () -> "[" + this.__data__.windowId + ':' + this.__data__.tabId + "]"
   )
 
 scaleX = (x) ->
-  (x * plot.scaleX) + plot.translateX 
+  (x * plot.scaleX) + plot.translateX
 
 tick = () ->
   plot._svg.selectAll('circle.focus')
@@ -550,18 +572,29 @@ _setup_svg = () ->
         .append('svg:path')
           .attr('d', (d) -> d.path )
           .attr('fill', plot.branchColor)
-  
+
   plot.defs.append('defs')
   .append('pattern')
-    .attr('id', 'diagonalHatch')
+    .attr('id', 'diagonalHatchWhite')
     .attr('patternUnits', 'userSpaceOnUse')
     .attr('width', 4)
     .attr('height', 4)
   .append('path')
     .attr('d', 'M-1,1 l2,-2 M0,4 l4,-4 M3,5 l2,-2')
-    .attr('fill', 'red')
-    .attr('stroke', 'rgba(0,0,0,0.25)')
+    .attr('stroke', 'rgba(0,0,0,0.2)')
     .attr('stroke-width', 1.5)
+
+  plot.defs.append('defs')
+  .append('pattern')
+    .attr('id', 'diagonalHatchBlack')
+    .attr('patternUnits', 'userSpaceOnUse')
+    .attr('width', 4)
+    .attr('height', 4)
+  .append('path')
+    .attr('d', 'M-1,1 l2,-2 M0,4 l4,-4 M3,5 l2,-2')
+    .attr('stroke', 'red')
+    .attr('stroke-width', 0.5)
+
 
 render = () ->
   tabs = TabInfo.db({type: 'tab'}).get()
@@ -581,4 +614,3 @@ render = () ->
   console.log ' -- END   RENDER -- '
 
   $('.render_container').scrollLeft(plot.width)
-
