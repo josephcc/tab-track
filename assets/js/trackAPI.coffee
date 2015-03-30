@@ -4,35 +4,6 @@
 #
 ###
 
-errorHandler = (e) ->
-  msg = ''
-
-  switch (e.code)
-    when FileError.QUOTA_EXCEEDED_ERR
-      msg = 'QUOTA_EXCEEDED_ERR'
-    when FileError.NOT_FOUND_ERR
-      msg = 'NOT_FOUND_ERR'
-    when FileError.SECURITY_ERR
-      msg = 'SECURITY_ERR'
-    when FileError.INVALID_MODIFICATION_ERR
-      msg = 'INVALID_MODIFICATION_ERR'
-    when FileError.INVALID_STATE_ERR
-      msg = 'INVALID_STATE_ERR'
-    else
-      msg = 'Unknown Error'
-
-  console.log('Error: ' + msg)
-
-objects2csv = (objects, attributes) ->
-  csvData = new Array()
-  csvData.push '"' + attributes.join('","') + '"'
-  for object in objects
-    row = []
-    for attribute in attributes
-      row.push ("" + object[attribute]).replace(/\\/g, "\\\\").replace(/"/g, '\\"')
-    csvData.push '"' + row.join('","') + '"'
-  return csvData.join('\n') + '\n'
-
 
 persistToFile = (filename, csv) ->
   onInitFs = (fs) ->
@@ -81,10 +52,10 @@ window.TabInfo = (() ->
         TabInfo.db(old).remove()
 
       chrome.storage.local.set {'tabs': {db: this, updateId: updateID}}
-  
+
   #Grab the info from localStorage and lets update it
   chrome.storage.onChanged.addListener (changes, areaName) ->
-    if changes.tabs? 
+    if changes.tabs?
       if !changes.tabs.newValue?
         obj.db = TAFFY()
         obj.db.settings(settings)
@@ -93,13 +64,13 @@ window.TabInfo = (() ->
         obj.db = TAFFY(changes.tabs.newValue.db, false)
         obj.db.settings(settings)
         updateFunction() if updateFunction?
-        
+
   chrome.storage.local.get 'tabs', (retVal) ->
     if retVal.tabs?
       obj.db = TAFFY(retVal.tabs.db)
     obj.db.settings(settings)
     updateFunction() if updateFunction?
-      
+
   obj.clearDB = () ->
     chrome.storage.local.remove('tabs')
     obj.db = TAFFY()
@@ -107,7 +78,7 @@ window.TabInfo = (() ->
     window.webkitRequestFileSystem(window.PERSISTENT, 50*1024*1024, (fs) ->
 
       fs.root.getFile('_tabLogs.csv', {create: false}, (fileEntry) ->
-        fileEntry.remove(() -> 
+        fileEntry.remove(() ->
           console.log('File removed.')
         , errorHandler)
       , errorHandler)
@@ -126,10 +97,9 @@ window.TabInfo = (() ->
 
 
     , errorHandler)
-      
+
   obj.db.settings(settings)
   obj.updateFunction = (fn) -> updateFunction = fn
 
   return obj
 )()
-

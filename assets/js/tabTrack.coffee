@@ -19,7 +19,7 @@ takeSnapshot = (action) ->
           tab.domainHash = CryptoJS.MD5(tab.domain).toString(CryptoJS.enc.Base64)
           tab.snapshotId = snapshotId
           tab.time = time
-          
+
           delete tab.width
           delete tab.height
           delete tab.selected

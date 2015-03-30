@@ -1,14 +1,4 @@
 
-objects2csv = (objects, attributes) ->
-  csvData = new Array()
-  csvData.push '"' + attributes.join('","') + '"'
-  for object in objects
-    row = []
-    for attribute in attributes
-      row.push ("" + object[attribute]).replace(/\\/g, "\\\\").replace(/"/g, '\\"')
-    csvData.push '"' + row.join('","') + '"'
-  return csvData.join('\n') + '\n'
-
 downloadCsv = (filename, csv, spillfile) ->
   onInitFs = (fs) ->
     console.log('Opened file system: ' + fs.name)
@@ -46,28 +36,6 @@ downloadCsv = (filename, csv, spillfile) ->
   window.webkitRequestFileSystem(window.PERSISTENT, 50*1024*1024, onInitFs, errorHandler);
 
 
-
-
-
-errorHandler = (e) ->
-  msg = ''
-
-  switch (e.code)
-    when FileError.QUOTA_EXCEEDED_ERR
-      msg = 'QUOTA_EXCEEDED_ERR'
-    when FileError.NOT_FOUND_ERR
-      msg = 'NOT_FOUND_ERR'
-    when FileError.SECURITY_ERR
-      msg = 'SECURITY_ERR'
-    when FileError.INVALID_MODIFICATION_ERR
-      msg = 'INVALID_MODIFICATION_ERR'
-    when FileError.INVALID_STATE_ERR
-      msg = 'INVALID_STATE_ERR'
-    else
-      msg = 'Unknown Error'
-
-  console.log('Error: ' + msg)
-
 $('.download.all').click () ->
   tabs = TabInfo.db({type: 'tab'}).get()
   attributes = ['snapshotId', 'windowId', 'id', 'openerTabId', 'index', 'status', 'snapshotAction', 'domain', 'url', 'domainHash', 'urlHash', 'favIconUrl', 'time']
@@ -97,14 +65,16 @@ lighten = (c, d) ->
   c = c * (1-d) + (255 * d)
   return Math.round(c)
 
+
+
 hashStringToColor = (str) ->
   hash = CryptoJS.MD5("" + str)
   r = (hash.words[0] & 0xFF0000) >> 16
   g = (hash.words[0] & 0x00FF00) >> 8
   b = hash.words[0] & 0x0000FF
-  r = lighten(r, 0.4)
-  g = lighten(g, 0.4)
-  b = lighten(b, 0.4)
+  r = lighten(r, 0.5)
+  g = lighten(g, 0.5)
+  b = lighten(b, 0.5)
   return 'rgba(' + r + ", " + g + ", " + b + ', 1.0)'
 #  return "#" + ("0" + r.toString(16)).substr(-2) + ("0" + g.toString(16)).substr(-2) + ("0" + b.toString(16)).substr(-2);
 
