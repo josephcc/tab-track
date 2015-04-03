@@ -78,6 +78,35 @@ hashStringToColor = (str) ->
   return 'rgba(' + r + ", " + g + ", " + b + ', 1.0)'
 #  return "#" + ("0" + r.toString(16)).substr(-2) + ("0" + g.toString(16)).substr(-2) + ("0" + b.toString(16)).substr(-2);
 
+jeffsSuperSecretColorScheme = (str) ->
+  hash = CryptoJS.MD5("" + str + "salt")
+  r = (hash.words[0] & 0xFF0000) >> 16
+  g = (hash.words[0] & 0x00FF00) >> 8
+  b = hash.words[0] & 0x0000FF
+  hash = r + g + b
+  jeffs = [
+    "#e05700",
+    "#0064b2",
+    "#f0e442",
+    "#00af73",
+    "#c575a1",
+    "#56b4df",
+    "#e69f46",
+    "#767676",
+    "#7a2100",
+    "#4e7a00",
+    "#0a3e6c",
+    "#452572",
+    "#fd8581",
+    "#b3e2ff",
+    "#c061ff",
+    "#feac7c",
+    "#bcff6e",
+    "#b04b47",
+    "#bcbe79",
+    "#9fbe79"]
+  return jeffs[hash % jeffs.length]
+
 pleaseColors = Please.make_color({
     saturation: 1.0,
     colors_returned: 100,
@@ -97,6 +126,7 @@ plot =
     timelineMargin: 4
     timeTickWidth: 100
     seamWidth: 0.05
+#    color: jeffsSuperSecretColorScheme
     color: d3.scale.category20()
 #    color: please
 #    color: hashStringToColor
