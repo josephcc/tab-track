@@ -1,0 +1,16 @@
+.axis text {
+    font-family: sans-serif;
+    font-size: 11px;
+}
+
+.axis.date path, .axis.date line {
+    fill: none;
+    stroke-width: 0;
+}
+
+
+.axis.time path, .axis.time line {
+    fill: none;
+    stroke: black;
+    shape-rendering: crispEdges;
+}

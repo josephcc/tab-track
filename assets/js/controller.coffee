@@ -65,8 +65,6 @@ lighten = (c, d) ->
   c = c * (1-d) + (255 * d)
   return Math.round(c)
 
-
-
 hashStringToColor = (str) ->
   hash = CryptoJS.MD5("" + str)
   r = (hash.words[0] & 0xFF0000) >> 16
@@ -85,27 +83,25 @@ jeffsSuperSecretColorScheme = (str) ->
   b = hash.words[0] & 0x0000FF
   hash = r + g + b
   jeffs = [
-    "#e05700",
-    "#0064b2",
-    "#f0e442",
-    "#00af73",
-    "#c575a1",
-    "#56b4df",
-    "#e69f46",
-    "#767676",
-    "#7a2100",
-    "#4e7a00",
-    "#0a3e6c",
-    "#452572",
-    "#fd8581",
-    "#b3e2ff",
-    "#c061ff",
-    "#feac7c",
-    "#bcff6e",
-    "#b04b47",
-    "#bcbe79",
-    "#9fbe79"]
+    "#e05700", "#0064b2", "#f0e442", "#00af73", "#c575a1",
+    "#56b4df", "#e69f46", "#767676", "#7a2100", "#4e7a00",
+    "#0a3e6c", "#452572", "#fd8581", "#b3e2ff", "#c061ff",
+    "#feac7c", "#bcff6e", "#b04b47", "#bcbe79", "#9fbe79"]
   return jeffs[hash % jeffs.length]
+
+category20 = d3.scale.category20()
+category20b = d3.scale.category20b()
+category20c = d3.scale.category20c()
+d3category20bc = (str) ->
+  hash = CryptoJS.MD5("" + str + "salt")
+  r = (hash.words[0] & 0xFF0000) >> 16
+  g = (hash.words[0] & 0x00FF00) >> 8
+  b = hash.words[0] & 0x0000FF
+  hash = r + g + b
+  if hash % 2 == 0
+    return category20b(str)
+  else
+    return category20c(str)
 
 pleaseColors = Please.make_color({
     saturation: 1.0,
@@ -123,11 +119,12 @@ plot =
     height: 750
     tabHeight: 30
     timelineHeight: 35
-    timelineMargin: 4
+    timelineMargin: 0
     timeTickWidth: 100
     seamWidth: 0.05
 #    color: jeffsSuperSecretColorScheme
     color: d3.scale.category20()
+#    color: d3category20bc
 #    color: please
 #    color: hashStringToColor
     scaleX: 1.0
@@ -149,72 +146,36 @@ plot.focusLineFunction = d3.svg.line()
    .interpolate("step-after")
 
 _render_timeline = () ->
-  ticks = (tick for tick in [plot.timeTickWidth..(plot.width - plot.timeTickWidth)] by plot.timeTickWidth)
-  plot.svg.selectAll('line.timeline')
-    .data([0])
-    .enter()
-    .append('line')
-    .attr('class', 'timeline')
-    .attr('x1', (tick, index) -> return 0)
-    .attr('y1', (tick, index) -> plot.timelineHeight)
-    .attr('x2', (tick, index) -> return plot.width - 5)
-    .attr('y2', (tick, index) -> plot.timelineHeight)
-    .attr('stroke', 'black')
-    .attr('marker-start', 'url(#marker_stub)')
-    .attr('marker-end', 'url(#marker_arrow)')
-
-  plot.svg.selectAll('line.timeTick')
-    .data(ticks)
-    .enter()
-    .append('line')
-    .attr('class', 'timeTick')
-    .attr('x1', (tick, index) -> return tick)
-    .attr('y1', (tick, index) -> 0)
-    .attr('x2', (tick, index) -> return tick)
-    .attr('y2', (tick, index) -> plot.timelineHeight)
-    .attr('stroke', 'black')
-
-  plot._svg.selectAll('text.dateTick')
-    .data(ticks)
-    .enter()
-    .append('text')
-    .attr('class', 'dateTick')
-    .text((tick, index) ->
-      unixtime = getTimeForX(parseInt(tick))
+  plot.timeAxis = d3.svg.axis()
+    .ticks(14)
+    .scale(plot.scale)
+    .orient('top')
+    .tickFormat((unixtime) ->
+      date = new Date()
+      date.setTime(unixtime)
+      timeString = date.getHours() + ":" + date.getMinutes() + ":" + date.getSeconds()
+      return timeString
+    )
+  plot.dateAxis = d3.svg.axis()
+    .ticks(14)
+    .scale(plot.scale)
+    .orient('top')
+    .tickFormat((unixtime) ->
       date = new Date()
       date.setTime(unixtime)
       dateString = date.toLocaleDateString("en-US")
       return dateString
     )
-    .attr('x', (tick, index) -> return tick + 4)
-    .attr('y', (tick, index) -> return plot.timelineHeight/2 - 2)
-    .attr('font-size', plot.timelineHeight * 0.9 / 2)
-
-  plot.svg.selectAll('line.timeTick')
-    .data(ticks)
-    .enter()
-    .append('line')
-    .attr('class', 'timeTick')
-    .attr('x1', (tick, index) -> return tick)
-    .attr('y1', (tick, index) -> 0)
-    .attr('x2', (tick, index) -> return tick)
-    .attr('y2', (tick, index) -> plot.timelineHeight)
-    .attr('stroke', 'black')
-  plot._svg.selectAll('text.timeTick')
-    .data(ticks)
-    .enter()
-    .append('text')
-    .attr('class', 'timeTick')
-    .text((tick, index) ->
-      unixtime = getTimeForX(parseInt(tick))
-      date = new Date()
-      date.setTime(unixtime)
-      dateString = date.getHours() + ":" + date.getMinutes() + ":" + date.getSeconds()
-      return dateString
-    )
-    .attr('x', (tick, index) -> return tick + 4)
-    .attr('y', (tick, index) -> return plot.timelineHeight - 2)
-    .attr('font-size', plot.timelineHeight * 0.9 / 2)
+  plot._svg
+    .append('g')
+    .attr('class', 'date axis')
+    .attr("transform", "translate(0,20)")
+    .call(plot.dateAxis)
+  plot._svg
+    .append('g')
+    .attr('class', 'time axis')
+    .attr("transform", "translate(0,32)")
+    .call(plot.timeAxis)
 
 _render_branches = () ->
   _branches = TabInfo.db({type: 'nav'}).get()
@@ -474,6 +435,8 @@ scaleX = (x) ->
   (x * plot.scaleX) + plot.translateX
 
 tick = () ->
+  plot._svg.select('g.date.axis').call(plot.dateAxis)
+  plot._svg.select('g.time.axis').call(plot.timeAxis)
   plot._svg.selectAll('circle.focus')
     .attr('cx', (focus, index) ->
       return scaleX(focus.cx)
@@ -529,10 +492,15 @@ _setup_svg = () ->
     plot.svg.attr("transform", "translate(" + d3.event.translate[0] + ", 0 )scale(" + d3.event.scale + ", 1)")
     tick()
 
-  zoom = d3.behavior.zoom()
+  plot.scale = d3.scale.linear()
+  plot.scale.domain([plot.start, plot.end])
+  plot.scale.range([0, plot.width * plot.scaleX])
+
+  plot.zoom = d3.behavior.zoom()
     .scaleExtent([plot.scaleMin, plot.scaleMax])
+    .x(plot.scale)
     .on("zoom", zoomed)
-  plot._svg.call(zoom)
+  plot._svg.call(plot.zoom)
 
   plot.defs = plot.svg.append('svg:defs')
   markers = [
