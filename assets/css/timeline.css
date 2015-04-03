@@ -8,9 +8,13 @@
     stroke-width: 0;
 }
 
-
-.axis.time path, .axis.time line {
+.axis.time path {
     fill: none;
     stroke: black;
+}
+
+.axis.time line {
+    fill: none;
+    stroke: rgba(0,0,0,0.05);
     shape-rendering: crispEdges;
 }

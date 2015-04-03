@@ -149,6 +149,7 @@ _render_timeline = () ->
   plot.timeAxis = d3.svg.axis()
     .ticks(14)
     .scale(plot.scale)
+    .tickSize(-plot.height)
     .orient('top')
     .tickFormat((unixtime) ->
       date = new Date()
