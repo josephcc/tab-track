@@ -97,9 +97,9 @@ plot =
     timelineMargin: 4
     timeTickWidth: 100
     seamWidth: 0.05
-#    color: d3.scale.category20()
+    color: d3.scale.category20()
 #    color: please
-    color: hashStringToColor
+#    color: hashStringToColor
     scaleX: 1.0
     scaleMin: 0.01
     scaleMax: 100
