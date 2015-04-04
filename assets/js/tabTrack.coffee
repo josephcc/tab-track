@@ -1,15 +1,15 @@
 
 console.log 'start'
 takeSnapshot = (action) ->
+  snapshotId = generateUUID()
+  time = Date.now()
   chrome.tabs.query {windowType: 'normal'}, (tabs) ->
     chrome.windows.getCurrent null, (window) ->
         console.log '========== BEGIN SNAPSHOT =========='
         console.log 'track - ' + action
 		#console.log window
         saveTabs = []
-        snapshotId = generateUUID()
 		#console.log tabs
-        time = Date.now()
         for tab in tabs
           tab.type = 'tab'
 		  #tab.inActiveWindow = tab.windowId == window.id

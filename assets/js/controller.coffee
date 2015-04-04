@@ -239,7 +239,7 @@ _render_tabs = () ->
   tabs = TabInfo.db({type: 'tab'}).get()
   snapshots = _.groupBy(tabs, (tab) -> tab.snapshotId)
   snapshots = _.values(snapshots)
-  _.sortBy(snapshots, (snapshot) -> snapshot.time)
+  snapshots = _.sortBy(snapshots, (snapshot) -> snapshot[0].time)
 
   tabs = []
   transitions = ([snapshot, snapshots[idx+1]] for snapshot, idx in snapshots)
@@ -378,13 +378,22 @@ _render_focus = () ->
     tabs = getTabsForIdTimeRange(focus1.tabId, focus1.time, focus2.time)
     if tabs.length == 1
       tabs = [$.extend(true, {},tabs[0]), $.extend(true, {},tabs[0])]
+    last = null
     if tabs.length >= 2
-      tabs[0].time = focus1.time
-      tabs[tabs.length-1].time = focus2.time
+      cy = getYForIndex(tabs[0].index) + (plot.tabHeight / 2)
+      cx = getXForTime(focus1.time)
+      paths.push {x: cx, y: cy, active: focus1.windowId >= 0}
+      cy = getYForIndex(tabs[tabs.length-1].index) + (plot.tabHeight / 2)
+      cx = getXForTime(focus2.time)
+      last = {x: cx, y: cy, active: focus1.windowId >= 0}
+      tabs.shift()
+      tabs.pop()
     for tab in tabs
       cy = getYForIndex(tab.index) + (plot.tabHeight / 2)
       cx = getXForTime(tab.time)
       paths.push {x: cx, y: cy, active: focus1.windowId >= 0}
+    if last?
+      paths.push last
 
   paths = ([path, paths[idx+1]] for path, idx in paths)
   paths.pop()
@@ -479,6 +488,8 @@ tick = () ->
 
 _setup_svg = () ->
   d3.select('svg').remove()
+  $('svg').remove()
+
   plot._svg = d3.select(".render_container")
       .append("svg")
       .attr('width', plot.width)

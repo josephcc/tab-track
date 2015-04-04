@@ -23,6 +23,7 @@ window.TabInfo = (() ->
   updateID = generateUUID()
   updateFunction = null
   settings =
+    cacheSize: 0
     template: {}
     onDBChange: () ->
       size = TabInfo.db().get().length
