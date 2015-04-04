@@ -495,7 +495,7 @@ _setup_svg = () ->
 
   plot.scale = d3.scale.linear()
   plot.scale.domain([plot.start, plot.end])
-  plot.scale.range([0, plot.width * plot.scaleX])
+  plot.scale.range([0, plot.width])
 
   plot.zoom = d3.behavior.zoom()
     .scaleExtent([plot.scaleMin, plot.scaleMax])
