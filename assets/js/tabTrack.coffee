@@ -4,34 +4,30 @@ takeSnapshot = (action) ->
   snapshotId = generateUUID()
   time = Date.now()
   chrome.tabs.query {windowType: 'normal'}, (tabs) ->
-    chrome.windows.getCurrent null, (window) ->
-        console.log '========== BEGIN SNAPSHOT =========='
-        console.log 'track - ' + action
-		#console.log window
-        saveTabs = []
-		#console.log tabs
-        for tab in tabs
-          tab.type = 'tab'
-		  #tab.inActiveWindow = tab.windowId == window.id
-          tab.snapshotAction = action
-          tab.domain = URI(tab.url).domain()
-          tab.urlHash = CryptoJS.MD5(tab.url).toString(CryptoJS.enc.Base64)
-          tab.domainHash = CryptoJS.MD5(tab.domain).toString(CryptoJS.enc.Base64)
-          tab.snapshotId = snapshotId
-          tab.time = time
+    console.log '========== BEGIN SNAPSHOT =========='
+    console.log 'track - ' + action
+    saveTabs = []
+    for tab in tabs
+      tab.type = 'tab'
+      tab.snapshotAction = action
+      tab.domain = URI(tab.url).domain()
+      tab.urlHash = CryptoJS.MD5(tab.url).toString(CryptoJS.enc.Base64)
+      tab.domainHash = CryptoJS.MD5(tab.domain).toString(CryptoJS.enc.Base64)
+      tab.snapshotId = snapshotId
+      tab.time = time
 
-          delete tab.width
-          delete tab.height
-          delete tab.selected
-          delete tab.highlighted
-          delete tab.incognito
-          delete tab.title
+      delete tab.width
+      delete tab.height
+      delete tab.selected
+      delete tab.highlighted
+      delete tab.incognito
+      delete tab.title
 
-		  #console.log tab
-          saveTabs.push tab
+      saveTabs.push tab
 
-        TabInfo.db.insert(saveTabs)
-        console.log '========== END   SNAPSHOT =========='
+    TabInfo.db.insert(saveTabs)
+    console.log saveTabs
+    console.log '========== END   SNAPSHOT =========='
 
 trackFocus = (action, windowId, tabId) ->
   console.log 'activated - ' + windowId + ':' + tabId
