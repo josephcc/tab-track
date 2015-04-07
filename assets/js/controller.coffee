@@ -198,7 +198,7 @@ _render_branches = () ->
     )
     .attr('y1', (branch, index) ->
       [tab, from] = branch
-      getYForIndex(from.index) + plot.tabHeight
+      getYForIndex(from.globalIndex) + plot.tabHeight
     )
     .attr('x2', (branch, index) ->
       [tab, from] = branch
@@ -206,7 +206,7 @@ _render_branches = () ->
     )
     .attr('y2', (branch, index) ->
       [tab, from] = branch
-      plot.tabHeight * (tab.index - from.index + 1) + getYForIndex(from.index) - (plot.tabHeight/2)
+      plot.tabHeight * (tab.globalIndex - from.globalIndex + 1) + getYForIndex(from.globalIndex) - (plot.tabHeight/2)
     )
     .attr('stroke', plot.branchColor)
   plot._svg.selectAll('line.branch_right')
@@ -221,7 +221,7 @@ _render_branches = () ->
     )
     .attr('y1', (branch, index) ->
       [tab, from] = branch
-      plot.tabHeight * (tab.index - from.index + 1) + getYForIndex(from.index) - (plot.tabHeight/2)
+      plot.tabHeight * (tab.globalIndex - from.globalIndex + 1) + getYForIndex(from.globalIndex) - (plot.tabHeight/2)
     )
     .attr('x2', (branch, index) ->
       [tab, from] = branch
@@ -229,7 +229,7 @@ _render_branches = () ->
     )
     .attr('y2', (branch, index) ->
       [tab, from] = branch
-      plot.tabHeight * (tab.index - from.index + 1) + getYForIndex(from.index) - (plot.tabHeight/2)
+      plot.tabHeight * (tab.globalIndex - from.globalIndex + 1) + getYForIndex(from.globalIndex) - (plot.tabHeight/2)
     )
     .attr('marker-end', 'url(#branch_marker_arrow)')
     .attr('stroke', plot.branchColor)
@@ -266,7 +266,7 @@ _render_tabs = () ->
         getXForTime(tab.time) - plot.seamWidth
       )
       .attr('y', (tab, index) ->
-        getYForIndex(tab.index)
+        getYForIndex(tab.globalIndex)
       )
       .attr('fill', (tab, index) ->
         return plot.color(tab.id)
@@ -287,7 +287,7 @@ _render_tabs = () ->
         getXForTime(tab.time) - plot.seamWidth
       )
       .attr('y', (tab, index) ->
-        getYForIndex(tab.index)
+        getYForIndex(tab.globalIndex)
       )
       .attr('fill', (tab, index) ->
         return 'url(#diagonalHatchBlack)'
@@ -308,7 +308,7 @@ _render_tabs = () ->
         getXForTime(tab.time) - plot.seamWidth
       )
       .attr('y', (tab, index) ->
-        getYForIndex(tab.index)
+        getYForIndex(tab.globalIndex)
       )
       .attr('fill', (tab, index) ->
         return 'url(#diagonalHatchWhite)'
@@ -364,7 +364,7 @@ _render_focus = () ->
   for focus in focuses
     tab = getTabForIdTime(focus.tabId, focus.time)
     if tab
-      focus.cy = getYForIndex(tab.index) + (plot.tabHeight / 2)
+      focus.cy = getYForIndex(tab.globalIndex) + (plot.tabHeight / 2)
       focus.cx = getXForTime(focus.time)
       _focuses.push focus
   focuses = _focuses
@@ -380,16 +380,16 @@ _render_focus = () ->
       tabs = [$.extend(true, {},tabs[0]), $.extend(true, {},tabs[0])]
     last = null
     if tabs.length >= 2
-      cy = getYForIndex(tabs[0].index) + (plot.tabHeight / 2)
+      cy = getYForIndex(tabs[0].globalIndex) + (plot.tabHeight / 2)
       cx = getXForTime(focus1.time)
       paths.push {x: cx, y: cy, active: focus1.windowId >= 0}
-      cy = getYForIndex(tabs[tabs.length-1].index) + (plot.tabHeight / 2)
+      cy = getYForIndex(tabs[tabs.length-1].globalIndex) + (plot.tabHeight / 2)
       cx = getXForTime(focus2.time)
       last = {x: cx, y: cy, active: focus1.windowId >= 0}
       tabs.shift()
       tabs.pop()
     for tab in tabs
-      cy = getYForIndex(tab.index) + (plot.tabHeight / 2)
+      cy = getYForIndex(tab.globalIndex) + (plot.tabHeight / 2)
       cx = getXForTime(tab.time)
       paths.push {x: cx, y: cy, active: focus1.windowId >= 0}
     if last?

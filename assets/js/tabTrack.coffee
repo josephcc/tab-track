@@ -25,6 +25,19 @@ takeSnapshot = (action) ->
 
       saveTabs.push tab
 
+    compare = (x, y) ->
+      if (x == y)
+        return 0
+      return x > y ? 1 : -1;
+    saveTabs.sort (x, y) ->
+      if x.windowId == y.windowId
+        return compare x.index, y.index
+      return compare x.windowId, y.windowId
+    globalIndex = 0
+    for tab in saveTabs
+      tab.globalIndex = globalIndex++
+    console.log saveTabs
+
     TabInfo.db.insert(saveTabs)
     console.log saveTabs
     console.log '========== END   SNAPSHOT =========='
