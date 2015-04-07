@@ -314,12 +314,21 @@ _render_tabs = () ->
         return 'url(#diagonalHatchWhite)'
       )
 
-  $('svg rect.tab, svg rect.search, svg rect.loading').tipsy(
+  $('svg rect.tab, svg rect.loading').tipsy(
     gravity: 'n',
     html: false,
     title: () ->
       return "[" + this.__data__.id + "] " + this.__data__.url
   )
+  $('svg rect.search').tipsy(
+    gravity: 'n',
+    html: false,
+    title: () ->
+      matches = this.__data__.url.match(/www\.google\.com\/.*q=(.*?)($|&)/)
+      query = decodeURIComponent(matches[1].replace(/\+/g, ' '))
+      return "[" + this.__data__.id + "] Google: " + query
+  )
+
 
 getTabForIdTime = (tabId, time) ->
   tabs = TabInfo.db({type: 'tab', id: tabId}).get()

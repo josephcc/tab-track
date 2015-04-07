@@ -57,7 +57,7 @@ chrome.tabs.onUpdated.addListener (tabId, changeInfo, tab) ->
     console.log changeInfo
     return
   # TODO: google doc pages will never finish loading
-  if not changeInfo.url? and tab.url.match(/https:\/\/docs.google.com\/.*\/edit\/.*/)?
+  if not changeInfo.url? and tab.url.match(/https:\/\/docs.google.com\/.*\/edit.*/)?
     return
 
   takeSnapshot('updated:' + changeInfo.status)
