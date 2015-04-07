@@ -31,7 +31,7 @@ window.TabInfo = (() ->
     console.log '  dbSize ' + size
     if size > 2000
       console.log 'persisting to file'
-      spillCount = Math.max(250, size - 2000)
+      spillCount = size - 2000 + 500
       console.log 'spilling ' + spillCount + ' records'
       old = TabInfo.db().order('time asec').limit(spillCount).get()
 
