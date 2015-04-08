@@ -29,7 +29,7 @@ window.TabInfo = (() ->
     console.log 'onDBChange exec'
     size = TabInfo.db().get().length
     console.log '  dbSize ' + size
-    if size > 2000
+    if size > 1500
       console.log 'persisting to file'
       spillCount = size - 2000 + 500
       console.log 'spilling ' + spillCount + ' records'
