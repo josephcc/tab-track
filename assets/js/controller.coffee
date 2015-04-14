@@ -589,7 +589,7 @@ render = () ->
   tabs = TabInfo.db({type: 'tab'}).get()
   plot.start = tabs[0].time
   plot.end = tabs[tabs.length - 1].time
-  plot.width = Math.max((plot.end - plot.start) / 5000, $('.render_container').width())
+  plot.width = $('.render_container').width()
   plot.timeScale = plot.width / (plot.end - plot.start)
 
   console.log ' -- BEGIN RENDER -- '
@@ -602,4 +602,4 @@ render = () ->
 
   console.log ' -- END   RENDER -- '
 
-  $('.render_container').scrollLeft(plot.width)
+#  $('.render_container').scrollLeft(plot.width)
