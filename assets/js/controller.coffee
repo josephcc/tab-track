@@ -118,6 +118,7 @@ please = (id) ->
 plot =
     height: 750
     tabHeight: 30
+    faviconHeight: 15
     timelineHeight: 35
     timelineMargin: 0
     timeTickWidth: 100
@@ -242,8 +243,10 @@ _render_tabs = () ->
   snapshots = _.sortBy(snapshots, (snapshot) -> snapshot[0].time)
 
   tabs = []
+  favicons = []
   transitions = ([snapshot, snapshots[idx+1]] for snapshot, idx in snapshots)
   transitions.pop()
+  favicons = transitions[0][0]
   for transition in transitions
     from = transition[0]
     to = transition[1]
@@ -251,6 +254,15 @@ _render_tabs = () ->
     for tab in from
       tab.endTime = endTime
       tabs.push tab
+
+    fromUrls = _.map from, (tab) -> tab.url
+    toUrls = _.map to, (tab) -> tab.url
+    newUrls = _.difference toUrls, fromUrls
+    if newUrls.length > 0
+      newUrlTabs = _.filter to, (tab) -> _.indexOf(newUrls, tab.url) >= 0
+      favicons = favicons.concat(newUrlTabs)
+
+  console.log favicons
 
   plot.svg.selectAll('rect.tab')
       .data(tabs)
@@ -313,6 +325,19 @@ _render_tabs = () ->
       .attr('fill', (tab, index) ->
         return 'url(#diagonalHatchWhite)'
       )
+
+  plot._svg.selectAll('image.favicon')
+    .data(favicons).enter()
+    .append('svg:image').attr('class', 'favicon')
+    .attr('xlink:href', (tab) -> 'chrome://favicon/' + tab.url)
+    .attr('height', plot.faviconHeight)
+    .attr('width', plot.faviconHeight)
+    .attr('x', (tab, index) ->
+      getXForTime(tab.time) - plot.seamWidth
+    )
+    .attr('y', (tab, index) ->
+      getYForIndex(tab.globalIndex) + plot.tabHeight - plot.faviconHeight
+    )
 
   $('svg rect.tab, svg rect.loading').tipsy(
     gravity: 'n',
@@ -471,6 +496,11 @@ tick = () ->
       .attr('font-size', plot.scaleX * plot.timelineHeight * 0.9 / 2)
     plot._svg.selectAll('text.timeTick')
       .attr('font-size', plot.scaleX * plot.timelineHeight * 0.9 / 2)
+
+  plot._svg.selectAll('image.favicon')
+    .attr('x', (tab, index) ->
+      scaleX(getXForTime(tab.time)) - plot.seamWidth
+    )
 
   plot._svg.selectAll('path.focus')
     .attr('d', (path) -> plot.focusLineFunction(path))

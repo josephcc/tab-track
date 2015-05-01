@@ -10,7 +10,8 @@
     "storage",
     "unlimitedStorage",
     "webNavigation",
-	"sessions"
+    "sessions",
+    "chrome://favicon/"
   ],
   "background": {
     "page": "dist/html/background.html",
