@@ -128,8 +128,8 @@ plot =
 #    color: please
 #    color: hashStringToColor
     scaleX: 1.0
-    scaleMin: 0.01
-    scaleMax: 100
+    scaleMin: 0.1
+    scaleMax: 300
     translateX: 0.0
     inFocusColor: 'white'
     outFocusColor: '#292929'
