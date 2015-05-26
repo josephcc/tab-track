@@ -1,5 +1,7 @@
 import datetime
 from operator import *
+import csv
+from collections import defaultdict
 
 class Tab:
 
@@ -27,6 +29,7 @@ class Snapshot:
         
         self.snapshotId = self.tabs[0].snapshotId
         self.time = self.tabs[0].time
+        self.endTime = None
         self.snapshotAction = self.tabs[0].snapshotAction
 
         self.tabs.sort(key=lambda tab: (tab.windowId, tab.index))
@@ -40,38 +43,26 @@ class Snapshot:
         self.__checkUniqueAttribute__('time', self.tabs)
         self.__checkUniqueAttribute__('snapshotAction', self.tabs)
 
+    def duration(self):
+        if not self.endTime:
+            return None
+        return self.endTime - self.time
+
     def __len__(self):
         return self.tabs.__len__()
 
     def __repr__(self):
-        return ('''
-[Snapshot:%s @ %s - %s
-  %s
-]
-        ''' % (
-            self.snapshotAction, self.time, self.snapshotId,
+        return ('[Snapshot:%s for %s @ %s - %s\n  %s\n]\n' % (
+            self.snapshotAction, self.duration(), self.time, self.snapshotId,
             '\n  '.join(map(str, self.tabs))
         )).encode('utf8')
 
+
+
 if __name__ == '__main__':
     import sys
-    import csv
-    from collections import defaultdict
-
-    fn = sys.argv[1]
-    snapshots = []
-    with open(fn, 'rb') as csvfile:
-        snapshotRows = defaultdict(list)
-        spamreader = csv.reader(csvfile)
-        for row in spamreader:
-            if row[0] == 'snapshotId' or len(row) != 13:
-                continue
-            snapshotRows[row[0]].append(row)
-
-        for _, rows in snapshotRows.items():
-            snapshots.append(Snapshot(rows))
-
-    snapshots.sort(key=attrgetter('time'))
+    from loaders import *
+    snapshots = loadTabSnapshots(sys.argv[1])
     for snapshot in snapshots:
         print snapshot
 
