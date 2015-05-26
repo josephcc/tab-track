@@ -38,3 +38,6 @@ vendor/
 
 #data dumps
 analysis/data
+
+#python
+.*.pyc
