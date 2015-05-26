@@ -21,3 +21,18 @@ def loadTabSnapshots(fn):
     # skip last record because it has no endTime
     snapshots.pop()
     return snapshots
+
+def loadFocus(fn):
+    focuses = []
+    with open(fn, 'rb') as csvfile:
+        spamreader = csv.reader(csvfile)
+        for row in spamreader:
+            if row[0] == 'action' or len(row) != 4:
+                continue
+            focus = Focus(row)
+            print focus
+            focuses.append(focus)
+
+    return focuses
+
+

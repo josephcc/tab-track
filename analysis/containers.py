@@ -20,6 +20,16 @@ class Tab:
     def __repr__(self):
         return ('<Tab %d:%d %s: %s>' % (self.windowId, self.index, self.status, self.url)).encode('utf8')
 
+class Focus:
+    def __init__(self, row):
+        row[1] = int(row[1])
+        row[2] = int(row[2])
+        row[3] = datetime.datetime.fromtimestamp(int(row[3])/1000.0)
+        self.action, self.windowId, self.id, self.time = row
+
+    def __repr__(self):
+        return ('<Focus %s %d:%d @ %s>' % (self.action, self.windowId, self.id, self.time)).encode('utf8')
+
 
 class Snapshot:
 
@@ -63,6 +73,12 @@ if __name__ == '__main__':
     import sys
     from loaders import *
     snapshots = loadTabSnapshots(sys.argv[1])
-    for snapshot in snapshots:
-        print snapshot
+    focuses = loadFocus(sys.argv[2])
+
+#    for snapshot in snapshots:
+#        print snapshot
+
+
+
+
 
