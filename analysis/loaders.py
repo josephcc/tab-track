@@ -3,7 +3,7 @@ from operator import *
 from containers import *
 from collections import defaultdict
 
-def loadTabSnapshots(fn):
+def loadSnapshot(fn):
     snapshots = []
     with open(fn, 'rb') as csvfile:
         snapshotRows = defaultdict(list)
@@ -37,6 +37,19 @@ def loadFocus(fn):
 
     focuses.sort(key=attrgetter('time'))
     return focuses
+
+def loadNav(fn):
+    navs = []
+    with open(fn, 'rb') as csvfile:
+        spamreader = csv.reader(csvfile)
+        for row in spamreader:
+            if row[0] == 'from' or len(row) != 3:
+                continue
+            nav = Nav(row)
+            navs.append(nav)
+
+    navs.sort(key=attrgetter('time'))
+    return navs
 
 def _trimByTime(a, s, e):
     while a[0].time < s:

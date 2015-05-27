@@ -29,6 +29,16 @@ class Focus:
     def __repr__(self):
         return ('<Focus %s %d:%d @ %s>' % (self.action, self.windowId, self.id, self.time)).encode('utf8')
 
+class Nav:
+    def __init__(self, row):
+        row[0] = int(row[1])
+        row[1] = int(row[2])
+        row[2] = datetime.datetime.fromtimestamp(int(row[2])/1000.0)
+        self.source, self.target, self.time = row
+
+    def __repr__(self):
+        return ('<Nav %d->%d @ %s>' % (self.source, self.target, self.time)).encode('utf8')
+
 
 class Snapshot:
 
@@ -75,8 +85,9 @@ class Snapshot:
 if __name__ == '__main__':
     import sys
     from loaders import *
-    snapshots = loadTabSnapshots(sys.argv[1])
+    snapshots = loadSnapshot(sys.argv[1])
     focuses = loadFocus(sys.argv[2])
+    navs = loadNav(sys.argv[3])
 
     addFocusToSnapshots(snapshots, focuses)
 
