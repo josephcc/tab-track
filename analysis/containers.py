@@ -61,18 +61,16 @@ class Snapshot:
         return self.tabs.__len__()
 
     def __repr__(self):
-        focus = ''
+        focusstr = ''
         if hasattr(self, 'focuses'):
-            focus += '\n  %s' % self.focuses[0]
-            focus += '\n  %s' % self.focuses[-1]
+            focusstr += '\n  (last) %s' % self.lastFocus
+            for focus in self.focuses:
+                focusstr += '\n  %s' % focus
         return ('[Snapshot:%s for %s @ %s - %s\n  %s%s\n]\n' % (
             self.snapshotAction, self.duration(), self.time, self.snapshotId,
             '\n  '.join(map(str, self.tabs)),
-            focus
+            focusstr
         )).encode('utf8')
-
-
-
 
 if __name__ == '__main__':
     import sys

@@ -1,19 +1,7 @@
 import csv
-from bisect import *
 from operator import *
 from containers import *
 from collections import defaultdict
-
-def equalOrSmaller(a, x):
-    a = map(attrgetter('time'), a)
-    idx = bisect_left(a, x)
-    if idx < len(a) and a[idx] == x:
-        return idx
-    return idx - 1
-
-def equalOrLarger(a, x):
-    a = map(attrgetter('time'), a)
-    return bisect_right(a, x)
 
 def loadTabSnapshots(fn):
     snapshots = []
@@ -62,16 +50,14 @@ def addFocusToSnapshots(snapshots, focuses):
     focuses.sort(key=attrgetter('time'))
     snapshots = _trimByTime(snapshots, focuses[0].time, focuses[-1].time)
 
-    for idx in range(len(snapshots)):
-        if len(focuses) == 0:
-            del snapshots[idx]
-            idx -= 1
-            continue
-        snapshot = snapshots[idx]
-        startIdx = equalOrSmaller(focuses, snapshot.time)
-        endIdx = equalOrLarger(focuses, snapshot.endTime)
-        snapshot.focuses = focuses[startIdx : endIdx + 1]
-        focuses = focuses[endIdx - 1 :]
+    lastFocus = None
+    for snapshot in snapshots:
+        snapshot.focuses = []
+        snapshot.lastFocus = lastFocus
+        while len(focuses) > 0 and focuses[0].time < snapshot.endTime:
+            snapshot.focuses.append(focuses[0])
+            lastFocus = focuses[0]
+            del focuses[0]
 
     return snapshots
 
