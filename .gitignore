@@ -40,4 +40,4 @@ vendor/
 analysis/data
 
 #python
-.*.pyc
+*.pyc

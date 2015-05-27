@@ -1,7 +1,5 @@
 import datetime
 from operator import *
-import csv
-from collections import defaultdict
 
 class Tab:
 
@@ -18,7 +16,8 @@ class Tab:
             self.openerTabId = int(self.openerTabId)
 
     def __repr__(self):
-        return ('<Tab %d:%d %s: %s>' % (self.windowId, self.index, self.status, self.url)).encode('utf8')
+        out = ('<Tab %d:%d %s: %s>' % (self.windowId, self.index, self.status, self.url)).encode('utf8')
+        return out
 
 class Focus:
     def __init__(self, row):
@@ -62,10 +61,16 @@ class Snapshot:
         return self.tabs.__len__()
 
     def __repr__(self):
-        return ('[Snapshot:%s for %s @ %s - %s\n  %s\n]\n' % (
+        focus = ''
+        if hasattr(self, 'focuses'):
+            focus += '\n  %s' % self.focuses[0]
+            focus += '\n  %s' % self.focuses[-1]
+        return ('[Snapshot:%s for %s @ %s - %s\n  %s%s\n]\n' % (
             self.snapshotAction, self.duration(), self.time, self.snapshotId,
-            '\n  '.join(map(str, self.tabs))
+            '\n  '.join(map(str, self.tabs)),
+            focus
         )).encode('utf8')
+
 
 
 
@@ -75,8 +80,10 @@ if __name__ == '__main__':
     snapshots = loadTabSnapshots(sys.argv[1])
     focuses = loadFocus(sys.argv[2])
 
-#    for snapshot in snapshots:
-#        print snapshot
+    addFocusToSnapshots(snapshots, focuses)
+
+    for snapshot in snapshots:
+        print snapshot
 
 
 
