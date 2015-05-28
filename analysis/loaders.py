@@ -104,7 +104,6 @@ def _findTabForNav(nav, snapshots):
     tab = allTabs[index]
     return tab
 
-
 def addNavToSnapshots(snapshots, navs):
     for snapshot in snapshots:
         for tab in snapshot.tabs:
@@ -118,4 +117,14 @@ def addNavToSnapshots(snapshots, navs):
                 continue
             source = sources[-1]
             tab.source = _findTabForNav(source, snapshots)
+
+def loadEverything(snapshotFn, focusFn, navFn):
+    snapshots = loadSnapshot(snapshotFn)
+    focuses = loadFocus(focusFn)
+    navs = loadNav(navFn)
+
+    addFocusToSnapshots(snapshots, focuses)
+    addNavToSnapshots(snapshots, navs)
+
+    return snapshots, focuses, navs
 
