@@ -86,7 +86,8 @@ class Snapshot:
 if __name__ == '__main__':
     import sys
     from loaders import *
-    snapshots, focuses, navs = loadEverything(sys.argv[1], sys.argv[2], sys.argv[3])
+    #snapshots, focuses, navs = loadEverything(sys.argv[1], sys.argv[2], sys.argv[3])
+    snapshots, focuses, navs = loadEverything(*sys.argv[1:])
 
     for snapshot in snapshots:
         print snapshot

@@ -98,6 +98,7 @@ def _findTabForNav(nav, snapshots):
 
     while allTabs[index].id != nav.source:
         index -= 1
+        # set a time constraint?
         if index < 0:
             return None
 
