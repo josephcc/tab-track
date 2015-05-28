@@ -1,4 +1,5 @@
 import csv
+from bisect import *
 from operator import *
 from containers import *
 from collections import defaultdict
@@ -74,4 +75,47 @@ def addFocusToSnapshots(snapshots, focuses):
             del focuses[0]
 
     return snapshots
+
+allTabs = None
+allTabTimeIndex = None
+snapshotsReference = None
+def _findTabForNav(nav, snapshots):
+    global allTabs
+    global allTabTimeIndex
+    global snapshotsReference
+    if allTabs == None or not (snapshotsReference is snapshots):
+        print 'rebuilding allTabIndex...'
+        snapshotsReference = snapshots
+        allTabs = []
+        for snapshot in snapshots:
+            allTabs += filter(lambda tab: tab.status == 'complete', snapshot.tabs)
+        allTabTimeIndex = map(attrgetter('time'), allTabs)
+        print 'done'
+        print
+    index = bisect_left(allTabTimeIndex, nav.time) - 1
+    if index < 0:
+        return None
+
+    while allTabs[index].id != nav.source:
+        index -= 1
+        if index < 0:
+            return None
+
+    tab = allTabs[index]
+    return tab
+
+
+def addNavToSnapshots(snapshots, navs):
+    for snapshot in snapshots:
+        for tab in snapshot.tabs:
+            if not navs.has_key(tab.id):
+                tab.source = None
+                continue
+            sources = navs[tab.id][:] # dup
+            sources = filter(lambda source: source.time < snapshot.time, sources)
+            if len(sources) == 0:
+                tab.source = None
+                continue
+            source = sources[-1]
+            tab.source = _findTabForNav(source, snapshots)
 

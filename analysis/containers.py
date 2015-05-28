@@ -15,7 +15,10 @@ class Tab:
             self.openerTabId = int(self.openerTabId)
 
     def __repr__(self):
-        out = ('<Tab %d:%d %s: %s>' % (self.windowId, self.index, self.status, self.url)).encode('utf8')
+        source = ''
+        if hasattr(self, 'source') and self.source != None:
+            source = '\n    from: %s\n  ' % self.source
+        out = ('<Tab %d:%d %s: %s%s>' % (self.windowId, self.id, self.status, self.url, source)).encode('utf8')
         return out
 
 class Focus:
@@ -88,6 +91,7 @@ if __name__ == '__main__':
     navs = loadNav(sys.argv[3])
 
     addFocusToSnapshots(snapshots, focuses)
+    addNavToSnapshots(snapshots, navs)
 
     for snapshot in snapshots:
         print snapshot
