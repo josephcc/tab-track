@@ -2,7 +2,6 @@ import datetime
 from operator import *
 
 class Tab:
-
     def __init__(self, row):
         self.snapshotId, self.windowId, self.id, self.openerTabId, self.index, self.status, self.snapshotAction, self.domain, self.url, self.domainHash, self.urlHash, self.favIconUrl, self.time = row
 
@@ -31,8 +30,8 @@ class Focus:
 
 class Nav:
     def __init__(self, row):
-        row[0] = int(row[1])
-        row[1] = int(row[2])
+        row[0] = int(row[0])
+        row[1] = int(row[1])
         row[2] = datetime.datetime.fromtimestamp(int(row[2])/1000.0)
         self.source, self.target, self.time = row
 
@@ -41,7 +40,6 @@ class Nav:
 
 
 class Snapshot:
-
     def __init__(self, rows):
         self.tabs = map(Tab, rows)
         self.fsck()
