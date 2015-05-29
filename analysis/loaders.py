@@ -66,13 +66,23 @@ def addFocusToSnapshots(snapshots, focuses):
     snapshots = _trimByTime(snapshots, focuses[0].time, focuses[-1].time)
 
     lastFocus = None
+    previousSnapshot = None
     for snapshot in snapshots:
         snapshot.focuses = []
         snapshot.lastFocus = lastFocus
         while len(focuses) > 0 and focuses[0].time < snapshot.endTime:
-            snapshot.focuses.append(focuses[0])
+            if not snapshot.hasTab(focuses[0].id):
+                if previousSnapshot != None and previousSnapshot.hasTab(focuses[0].id):
+                    focuses[0].time = previousSnapshot.endTime
+                    previousSnapshot.focuses.append(focuses[0])
+                else: # TODO: not sure if this covers every cases
+                    focuses[0].time = snapshot.endTime
+                    continue
+            else:
+                snapshot.focuses.append(focuses[0])
             lastFocus = focuses[0]
             del focuses[0]
+        previousSnapshot = snapshot
 
     return snapshots
 

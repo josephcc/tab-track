@@ -63,10 +63,18 @@ class Snapshot:
         self.__checkUniqueAttribute__('time', self.tabs)
         self.__checkUniqueAttribute__('snapshotAction', self.tabs)
 
+        if hasattr(self, 'focuses'):
+            assert(hasattr(self, 'tabs'))
+            for focus in self.focuses:
+                assert(self.hasTab(focus.id))
+
     def duration(self):
         if not self.endTime:
             return None
         return self.endTime - self.time
+
+    def hasTab(self, id): #TODO: optimize this
+        return len(filter(lambda tab: tab.id == id, self.tabs)) > 0
 
     def __len__(self):
         return self.tabs.__len__()
@@ -77,8 +85,8 @@ class Snapshot:
             focusstr += '\n  (last) %s' % self.lastFocus
             for focus in self.focuses:
                 focusstr += '\n  %s' % focus
-        return ('[Snapshot:%s for %s @ %s - %s\n  %s%s\n]\n' % (
-            self.snapshotAction, self.duration(), self.time, self.snapshotId,
+        return ('[Snapshot:%s for %s @ %s ~ %s - %s\n  %s%s\n]\n' % (
+            self.snapshotAction, self.duration(), self.time, self.endTime, self.snapshotId,
             '\n  '.join(map(str, self.tabs)),
             focusstr
         )).encode('utf8')
@@ -90,9 +98,6 @@ if __name__ == '__main__':
     snapshots, focuses, navs = loadEverything(*sys.argv[1:])
 
     for snapshot in snapshots:
+        snapshot.fsck()
         print snapshot
-
-
-
-
 
