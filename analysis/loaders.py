@@ -65,24 +65,64 @@ def addFocusToSnapshots(snapshots, focuses):
     focuses.sort(key=attrgetter('time'))
     snapshots = _trimByTime(snapshots, focuses[0].time, focuses[-1].time)
 
-    lastFocus = None
-    previousSnapshot = None
-    for snapshot in snapshots:
-        snapshot.focuses = []
-        snapshot.lastFocus = lastFocus
+    for idx in range(len(snapshots)):
+        prevSnapshot = idx > 0 and snapshots[idx-1] or None
+        snapshot = snapshots[idx]
+        nextSnapshot = idx + 1 < len(snapshots) and snapshots[idx+1] or None
+
+        if not hasattr(snapshot, 'focuses'):
+            snapshot.focuses = []
+        if prevSnapshot != None and not hasattr(prevSnapshot, 'focuses'):
+            prevSnapshot.focuses = []
+        if nextSnapshot != None and not hasattr(nextSnapshot, 'focuses'):
+            nextSnapshot.focuses = []
+
         while len(focuses) > 0 and focuses[0].time < snapshot.endTime:
-            if not snapshot.hasTab(focuses[0].id):
-                if previousSnapshot != None and previousSnapshot.hasTab(focuses[0].id):
-                    focuses[0].time = previousSnapshot.endTime
-                    previousSnapshot.focuses.append(focuses[0])
-                else: # TODO: not sure if this covers every cases
-                    focuses[0].time = snapshot.endTime
-                    continue
-            else:
-                snapshot.focuses.append(focuses[0])
-            lastFocus = focuses[0]
+            snapshot.focuses.append(focuses[0])
             del focuses[0]
-        previousSnapshot = snapshot
+
+        if prevSnapshot != None:
+            for idx in range(len(snapshot.focuses)):
+                if snapshot.hasTab(snapshot.focuses[idx].id):
+                    break
+                elif prevSnapshot.hasTab(snapshot.focuses[idx].id):
+                    prevSnapshot.focuses.append(snapshot.focuses[idx])
+                    prevSnapshot.focuses[-1].time = prevSnapshot.endTime
+                    snapshot.focuses[idx] = None
+        snapshot.focuses = filter(lambda x: x != None, snapshot.focuses)
+
+        if nextSnapshot != None:
+            for idx in reversed(range(len(snapshot.focuses))):
+                if snapshot.hasTab(snapshot.focuses[idx].id):
+                    break
+                elif nextSnapshot.hasTab(snapshot.focuses[idx].id):
+                    nextSnapshot.focuses.insert(0, snapshot.focuses[idx])
+                    nextSnapshot.focuses[0].time = nextSnapshot.time
+                    snapshot.focuses[idx] = None
+        snapshot.focuses = filter(lambda x: x != None, snapshot.focuses)
+
+
+        for focus in snapshot.focuses:
+            if not snapshot.hasTab(focus.id):
+                print '=' * 33
+                print focus
+                print 'PREV'
+                print prevSnapshot
+                print 'CURR'
+                print snapshot
+                print 'NEXT'
+                print nextSnapshot
+                print '=' * 33
+                break
+
+
+    lastFocus = None
+    for snapshot in snapshots:
+        snapshot.lastFocus = lastFocus
+        lastFocus = len(snapshot.focuses) > 0 and snapshot.focuses[-1] or snapshot.lastFocus
+
+
+    print 'LEFT %d' % len(focuses)
 
     return snapshots
 

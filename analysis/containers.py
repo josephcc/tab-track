@@ -83,8 +83,9 @@ class Snapshot:
 
     def __repr__(self):
         focusstr = ''
-        if hasattr(self, 'focuses'):
+        if hasattr(self, 'lastFocus'):
             focusstr += '\n  (last) %s' % self.lastFocus
+        if hasattr(self, 'focuses'):
             for focus in self.focuses:
                 focusstr += '\n  %s' % focus
         return ('[Snapshot:%s for %s @ %s ~ %s - %s\n  %s%s\n]\n' % (
