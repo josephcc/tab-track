@@ -101,28 +101,15 @@ def addFocusToSnapshots(snapshots, focuses):
                     snapshot.focuses[idx] = None
         snapshot.focuses = filter(lambda x: x != None, snapshot.focuses)
 
-
-        for focus in snapshot.focuses:
-            if not snapshot.hasTab(focus.id):
-                print '=' * 33
-                print focus
-                print 'PREV'
-                print prevSnapshot
-                print 'CURR'
-                print snapshot
-                print 'NEXT'
-                print nextSnapshot
-                print '=' * 33
-                break
-
-
     lastFocus = None
     for snapshot in snapshots:
         snapshot.lastFocus = lastFocus
         lastFocus = len(snapshot.focuses) > 0 and snapshot.focuses[-1] or snapshot.lastFocus
 
 
-    print 'LEFT %d' % len(focuses)
+    print '# of out of range focuses %d' % len(focuses)
+    print focuses
+    print
 
     return snapshots
 
