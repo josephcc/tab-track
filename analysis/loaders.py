@@ -64,6 +64,7 @@ def addFocusToSnapshots(snapshots, focuses):
     snapshots.sort(key=attrgetter('time'))
     focuses.sort(key=attrgetter('time'))
     snapshots = _trimByTime(snapshots, focuses[0].time, focuses[-1].time)
+    focuses = _trimByTime(focuses, snapshots[0].time, snapshots[-1].time)
 
     for idx in range(len(snapshots)):
         prevSnapshot = idx > 0 and snapshots[idx-1] or None
@@ -100,6 +101,19 @@ def addFocusToSnapshots(snapshots, focuses):
                     nextSnapshot.focuses[0].time = nextSnapshot.time
                     snapshot.focuses[idx] = None
         snapshot.focuses = filter(lambda x: x != None, snapshot.focuses)
+
+    for focus in snapshot.focuses:
+        if not snapshot.hasTab(focus.id):
+            print '=' * 33
+            print focus
+            print 'PREV'
+            print prevSnapshot
+            print 'CURR'
+            print snapshot
+            print 'NEXT'
+            print nextSnapshot
+            print '=' * 33
+            break
 
     lastFocus = None
     for snapshot in snapshots:
