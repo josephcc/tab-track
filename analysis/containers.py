@@ -101,6 +101,6 @@ if __name__ == '__main__':
     snapshots, focuses, navs = loadEverything(*sys.argv[1:])
 
     for snapshot in snapshots:
-        snapshot.fsck()
         print snapshot
+        snapshot.fsck()
 

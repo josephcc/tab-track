@@ -66,6 +66,12 @@ def addFocusToSnapshots(snapshots, focuses):
     snapshots = _trimByTime(snapshots, focuses[0].time, focuses[-1].time)
     focuses = _trimByTime(focuses, snapshots[0].time, snapshots[-1].time)
 
+    # this moves all none existing head / tail focuses to the prev / next snapshot,
+    # BUT!! they might not be consecutive, it could be exi exi exi non exi exi
+    # in that case you want to either
+    # 1) move the last 3 to the next snapshot 
+    # 2) move the first 4 to the prev snapshot
+    # ... need to re-write the entire logic orz
     for idx in range(len(snapshots)):
         prevSnapshot = idx > 0 and snapshots[idx-1] or None
         snapshot = snapshots[idx]
