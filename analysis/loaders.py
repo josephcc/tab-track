@@ -1,3 +1,4 @@
+import sys
 import csv
 from bisect import *
 from operator import *
@@ -105,14 +106,11 @@ def _findTabForNav(nav, snapshots):
     global allTabTimeIndex
     global snapshotsReference
     if allTabs == None or not (snapshotsReference is snapshots):
-        print 'rebuilding allTabIndex...'
         snapshotsReference = snapshots
         allTabs = []
         for snapshot in snapshots:
             allTabs += filter(lambda tab: tab.status == 'complete', snapshot.tabs)
         allTabTimeIndex = map(attrgetter('time'), allTabs)
-        print 'done'
-        print
     index = bisect_left(allTabTimeIndex, nav.time) - 1
     if index < 0:
         return None
@@ -141,12 +139,19 @@ def addNavToSnapshots(snapshots, navs):
             tab.source = _findTabForNav(source, snapshots)
 
 def loadEverything(snapshotFn, focusFn, navFn):
+    print >> sys.stderr, 'Loading tab logs...',
     snapshots = loadSnapshot(snapshotFn)
+    print >> sys.stderr, ' Done\nLoading focus logs...',
     focuses = loadFocus(focusFn)
+    print >> sys.stderr, ' Done\nLoading nav logs...',
     navs = loadNav(navFn)
+    print >> sys.stderr, ' Done'
 
+    print >> sys.stderr, 'Mapping focus to snapshots...',
     addFocusToSnapshots(snapshots, focuses)
+    print >> sys.stderr, ' Done\nMapping nav to snapshots...',
     addNavToSnapshots(snapshots, navs)
+    print >> sys.stderr, ' Done'
 
     return snapshots, focuses, navs
 
