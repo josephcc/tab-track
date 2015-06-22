@@ -29,7 +29,7 @@ class Tab:
         source = ''
         if hasattr(self, 'source') and self.source != None:
             source = '\n    from: %s\n  ' % self.source
-        out = ('<Tab %d:%d %s: %s%s>' % (self.windowId, self.id, self.status, self.url, source)).encode('utf8')
+        out = ('<Tab %d:%d %s: %s%s>%s' % (self.windowId, self.id, self.status, self.url, source, self.init and ' (new)' or '')).encode('utf8')
         return out
 
 class Focus:

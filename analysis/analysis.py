@@ -51,8 +51,8 @@ def tabHours(snapshots):
             tabTime += duration * len(snapshot.tabs)
         tabHisto[len(snapshot.tabs)] += snapshot_active
 
-        # TODO wrong way to detect creation
-        tabs = filter(lambda tab: tab.status == 'loading', snapshot.tabs)
+        # TODO this is wrong, you need to use the navlogs to get the correct numbers
+        tabs = filter(lambda tab: tab.init, snapshot.tabs)
         tabs = filter(lambda tab: tab.directSource() != None, tabs)
         for tab in tabs:
             directBranching[tab.directSource().domain] += 1
@@ -65,8 +65,7 @@ def tabHours(snapshots):
 def searches(snapshots, domain='google.com'):
     count = 0
     for snapshot in snapshots:
-        # TODO wrong way to detect creation
-        tabs = filter(lambda tab: tab.status == 'loading', snapshot.tabs)
+        tabs = filter(lambda tab: tab.init, snapshot.tabs)
         tabs = filter(lambda tab: domain in tab.domain, tabs)
         tabs = filter(lambda tab: 'search' in tab.url, tabs)
         count += len(tabs)
@@ -76,7 +75,7 @@ def searches(snapshots, domain='google.com'):
 def printDeltaHisto(histo, label):
     histo = [(count, float('%.2f' % minutes)) for count, minutes in histo]
     for line in Pyasciigraph().graph(label, histo):
-        print line
+        print line.encode('utf8')
 
 def main():
 

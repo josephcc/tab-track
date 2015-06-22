@@ -22,6 +22,17 @@ def loadSnapshot(fn):
     for idx in range(len(snapshots) - 1):
         fr = snapshots[idx]
         to = snapshots[idx+1]
+        for tab in to.tabs:
+            tab.init = False
+            if tab.status == 'complete':
+                prevTab = fr.findTab(tab.id)
+                if prevTab != None and prevTab.status in ('complete', 'done'):
+                    tab.status = 'done'
+            if tab.status == 'loading':
+                if not fr.hasTab(tab.id):
+                    tab.init = True
+
+
         fr.endTime = to.time
     # skip last record because it has no endTime
     snapshots.pop()
