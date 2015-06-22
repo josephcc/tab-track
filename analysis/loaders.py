@@ -74,7 +74,7 @@ def _trimByTime(a, s, e):
 
 def _getSnapshotForTime(snapshots, focus):
     index = bisect_left(snapshots, focus)
-    snapshots = snapshots[max(0, index-50) : min(len(snapshots)-1, index+50)]
+    snapshots = snapshots[max(0, index-5) : min(len(snapshots)-1, index+5)]
     snapshots = filter(lambda snapshot: snapshot.hasTab(focus.id), snapshots)
 
     diffs = []
@@ -114,7 +114,7 @@ def addFocusToSnapshots(snapshots, focuses):
 
 def _getTabForIdTime(tabId, time, snapshots):
     index = bisect_left(snapshots, time)
-    snapshots = snapshots[max(0, index-50) : min(len(snapshots)-1, index+50)]
+    snapshots = snapshots[max(0, index-25) : min(len(snapshots)-1, index+25)]
     snapshots = filter(lambda snapshot: snapshot.hasTab(tabId) and snapshot.findTab(tabId).init, snapshots)
 
     diffs = []
