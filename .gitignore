@@ -41,3 +41,4 @@ analysis/data
 
 #python
 *.pyc
+*.pickle
