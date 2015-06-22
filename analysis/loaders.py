@@ -1,5 +1,6 @@
 import sys
 import csv
+from itertools import *
 from bisect import *
 from operator import *
 from containers import *
@@ -9,8 +10,8 @@ def loadSnapshot(fn):
     snapshots = []
     with open(fn, 'rb') as csvfile:
         snapshotRows = defaultdict(list)
-        spamreader = csv.reader(csvfile)
-        for row in spamreader:
+        csvreader = csv.reader(csvfile)
+        for row in csvreader:
             if row[0] == 'snapshotId' or len(row) != 13:
                 continue
             snapshotRows[row[0]].append(row)
@@ -41,8 +42,8 @@ def loadSnapshot(fn):
 def loadFocus(fn):
     focuses = []
     with open(fn, 'rb') as csvfile:
-        spamreader = csv.reader(csvfile)
-        for row in spamreader:
+        csvreader = csv.reader(csvfile)
+        for row in csvreader:
             if row[0] == 'action' or len(row) != 4:
                 continue
             focus = Focus(row)
@@ -52,17 +53,16 @@ def loadFocus(fn):
     return focuses
 
 def loadNav(fn):
-    navs = defaultdict(list)
+    navs = []
     with open(fn, 'rb') as csvfile:
-        spamreader = csv.reader(csvfile)
-        for row in spamreader:
+        csvreader = csv.reader(csvfile)
+        for row in csvreader:
             if row[0] == 'from' or len(row) != 3:
                 continue
             nav = Nav(row)
-            navs[nav.target].append(nav)
+            navs.append(nav)
 
-    for target, a in navs.items():
-        a.sort(key=attrgetter('time'))
+    navs.sort(key=attrgetter('time'))
     return navs
 
 def _trimByTime(a, s, e):
@@ -73,6 +73,8 @@ def _trimByTime(a, s, e):
     return a
 
 def _getSnapshotForTime(snapshots, focus):
+    index = bisect_left(snapshots, focus)
+    snapshots = snapshots[max(0, index-50) : min(len(snapshots)-1, index+50)]
     snapshots = filter(lambda snapshot: snapshot.hasTab(focus.id), snapshots)
 
     diffs = []
@@ -86,9 +88,6 @@ def _getSnapshotForTime(snapshots, focus):
     if len(diffs) > 0:
         snapshots[diffs[0][0]].focuses.append(focus)
 
-# TODO TODO TODO
-# this really needs to be optimized
-# do a heuristic slice before doing diff
 def addFocusToSnapshots(snapshots, focuses):
     snapshots.sort(key=attrgetter('time'))
     focuses.sort(key=attrgetter('time'))
@@ -112,45 +111,32 @@ def addFocusToSnapshots(snapshots, focuses):
 
     return snapshots
 
-allTabs = None
-allTabTimeIndex = None
-snapshotsReference = None
-def _findTabForNav(nav, snapshots):
-    global allTabs
-    global allTabTimeIndex
-    global snapshotsReference
-    if allTabs == None or not (snapshotsReference is snapshots):
-        snapshotsReference = snapshots
-        allTabs = []
-        for snapshot in snapshots:
-            allTabs += filter(lambda tab: tab.status == 'complete', snapshot.tabs)
-        allTabTimeIndex = map(attrgetter('time'), allTabs)
-    index = bisect_left(allTabTimeIndex, nav.time) - 1
-    if index < 0:
-        return None
 
-    while allTabs[index].id != nav.source:
-        index -= 1
-        # set a time constraint?
-        if index < 0:
-            return None
+def _getTabForIdTime(tabId, time, snapshots):
+    index = bisect_left(snapshots, time)
+    snapshots = snapshots[max(0, index-50) : min(len(snapshots)-1, index+50)]
+    snapshots = filter(lambda snapshot: snapshot.hasTab(tabId) and snapshot.findTab(tabId).init, snapshots)
 
-    tab = allTabs[index]
-    return tab
+    diffs = []
+    for snapshot in snapshots:
+        diffs.append( abs(time - snapshot.time) )
+
+    diffs = list(enumerate(diffs))
+    diffs.sort(key=itemgetter(1))
+
+    if len(diffs) > 0:
+        snapshot = snapshots[diffs[0][0]]
+        return snapshot, snapshot.findTab(tabId)
+    return None, None
+    
+
 
 def addNavToSnapshots(snapshots, navs):
-    for snapshot in snapshots:
-        for tab in snapshot.tabs:
-            if not navs.has_key(tab.id):
-                tab.source = None
-                continue
-            sources = navs[tab.id][:] # dup
-            sources = filter(lambda source: source.time < snapshot.time, sources)
-            if len(sources) == 0:
-                tab.source = None
-                continue
-            source = sources[-1]
-            tab.source = _findTabForNav(source, snapshots)
+    for nav in navs:
+        frSnapshot, fr = _getTabForIdTime(nav.source, nav.time, snapshots)
+        toSnapshot, to = _getTabForIdTime(nav.target, nav.time, snapshots)
+        if to != None and fr != None:
+            to.source = fr
 
 def loadEverything(snapshotFn, focusFn, navFn):
     print >> sys.stderr, 'Loading tab logs...',

@@ -69,6 +69,11 @@ class Snapshot:
         values = map(attrgetter(attr), objs)
         assert len(set(values)) == 1
 
+    def __lt__(self, other):
+        if type(other) == datetime.datetime:
+            return self.time.__lt__(other)
+        return self.time.__lt__(other.time)
+
     def fsck(self):
         self.__checkUniqueAttribute__('snapshotId', self.tabs)
         self.__checkUniqueAttribute__('time', self.tabs)

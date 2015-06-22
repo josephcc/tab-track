@@ -51,7 +51,7 @@ def tabHours(snapshots):
             tabTime += duration * len(snapshot.tabs)
         tabHisto[len(snapshot.tabs)] += snapshot_active
 
-        # TODO this is wrong, you need to use the navlogs to get the correct numbers
+        # TODO this is wrong, you need to use the navlogs to get the correct numbers?
         tabs = filter(lambda tab: tab.init, snapshot.tabs)
         tabs = filter(lambda tab: tab.directSource() != None, tabs)
         for tab in tabs:
@@ -79,13 +79,16 @@ def printDeltaHisto(histo, label):
 
 def main():
 
+    snapshots = init()
     try:
-        snapshots = init()
-    except:
+        pass
+    except Exception as e:
         print '\nUsage:'
         print '\tpython analysis.py tabLogs.csv focusLogs.csv navLogs.csv'
         print '\tpython analysis.py tabLogs.csv focusLogs.csv navLogs.csv snapshots.pickle'
         print '\tpython analysis.py snapshots.pickle\n'
+        t, v, tb = sys.exc_info()
+        raise t, v, tb
         sys.exit()
 
     print >> sys.stderr, 'Checking snapshot integrity...',
