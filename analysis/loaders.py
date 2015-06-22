@@ -75,6 +75,9 @@ def _getSnapshotForTime(snapshots, focus):
     if len(diffs) > 0:
         snapshots[diffs[0][0]].focuses.append(focus)
 
+# TODO TODO TODO
+# this really needs to be optimized
+# do a heuristic slice before doing diff
 def addFocusToSnapshots(snapshots, focuses):
     snapshots.sort(key=attrgetter('time'))
     focuses.sort(key=attrgetter('time'))
