@@ -29,7 +29,7 @@ def loadSnapshot(fn):
                 if prevTab != None and prevTab.status in ('complete', 'done'):
                     tab.status = 'done'
             if tab.status == 'loading':
-                if not fr.hasTab(tab.id):
+                if not fr.hasTab(tab.id) or fr.findTab(tab.id).url != tab.url:
                     tab.init = True
 
 
