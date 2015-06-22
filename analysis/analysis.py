@@ -3,6 +3,8 @@ import sys
 import cPickle as pickle
 from itertools import *
 
+from ascii_graph import Pyasciigraph
+
 from loaders import *
 from containers import *
 
@@ -27,21 +29,44 @@ def init():
     return snapshots
 
 def tabHours(snapshots):
-    tab = datetime.timedelta(0)
-    active = datetime.timedelta(0)
-    total = datetime.timedelta(0)
+    tabTime = datetime.timedelta()
+    active = datetime.timedelta()
     maxCount = 0
+    tabHisto = defaultdict(datetime.timedelta)
+    domainTime = defaultdict(datetime.timedelta)
+
     for snapshot in snapshots:
-        total += snapshot.endTime - snapshot.time
         maxCount = max(maxCount, len(snapshot.tabs))
+        snapshot_active = datetime.timedelta()
         for this, next in izip(snapshot.focuses[:-1], snapshot.focuses[1:]):
             if this.windowId <= 0:
                 continue
             duration = next.time - this.time
             active += duration
-            tab += duration * len(snapshot.tabs)
+            tab = snapshot.findTab(this.id)
+            domainTime[tab.domain] += duration
+            snapshot_active += duration
+            tabTime += duration * len(snapshot.tabs)
+        tabHisto[len(snapshot.tabs)] += snapshot_active
             
-    return total, active, tab, maxCount
+    return active, tabTime, maxCount, tabHisto, domainTime
+
+# TODO double check search url patterns
+def searches(snapshots, domain='google.com'):
+    count = 0
+    for snapshot in snapshots:
+        tabs = filter(lambda tab: tab.status == 'loading', snapshot.tabs)
+        tabs = filter(lambda tab: domain in tab.domain, tabs)
+        tabs = filter(lambda tab: 'search' in tab.url, tabs)
+        count += len(tabs)
+
+    return count
+
+def printDeltaHisto(histo, label):
+    histo = [(count, delta.total_seconds()/60) for count, delta in histo]
+    histo = [(count, float('%.2f' % minutes)) for count, minutes in histo]
+    for line in Pyasciigraph().graph(label, histo):
+        print line
 
 def main():
 
@@ -61,13 +86,30 @@ def main():
 
     print '-' * 44
 
-    total, active, tab, maxCount = tabHours(snapshots)
+    total = snapshots[-1].endTime - snapshots[0].time
+    active, tab, maxCount, tabHisto, domainHisto = tabHours(snapshots)
+    searchCount = searches(snapshots)
+
     print 'Log duration:\t\t', total
     print 'Active duration:\t', active
     print 'Active ratio:\t\t%.2f%%' % (100 * active.total_seconds() / total.total_seconds())
     print 'Tab duration:\t\t', tab
     print 'Max number of tabs:\t', maxCount
     print 'Average number of tabs:\t', tab.total_seconds() / active.total_seconds()
+    print 'Number of searches:\t', searchCount
+    print '1 search every:\t\t', active.total_seconds() / searchCount, 'seconds'
+
+    print '-' * 44
+
+    tabHisto = tabHisto.items()
+    tabHisto.sort(key=itemgetter(0), reverse=True)
+    printDeltaHisto(tabHisto, 'Tab count / Active minutes')
+
+    print '-' * 44
+
+    domainHisto = domainHisto.items()
+    domainHisto.sort(key=itemgetter(1), reverse=True)
+    printDeltaHisto(domainHisto[:5], 'Domain / Active minutes')
 
     print '-' * 44
 

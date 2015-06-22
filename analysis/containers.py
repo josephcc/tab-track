@@ -78,6 +78,9 @@ class Snapshot:
         #return len(filter(lambda tab: tab.id == id, self.tabs)) > 0 # 32.86s for 5 runs
         return next(ifilter(lambda tab: tab.id == id, self.tabs), None) != None # 36.343s for 5 runs
 
+    def findTab(self, id): #TODO: optimize this
+        return next(ifilter(lambda tab: tab.id == id, self.tabs), None)
+
     def __len__(self):
         return self.tabs.__len__()
 
