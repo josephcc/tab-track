@@ -15,6 +15,16 @@ class Tab:
         else:
             self.openerTabId = int(self.openerTabId)
 
+    def directSource(self):
+        if hasattr(self, 'source') and self.source != None:
+            return self.source
+        return None
+
+    def indirectSources(self):
+        if hasattr(self, 'source') and self.source != None:
+            return [self.directSource()] + self.directSource().indirectSources()
+        return []
+
     def __repr__(self):
         source = ''
         if hasattr(self, 'source') and self.source != None:

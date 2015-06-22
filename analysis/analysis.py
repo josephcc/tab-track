@@ -34,6 +34,8 @@ def tabHours(snapshots):
     maxCount = 0
     tabHisto = defaultdict(datetime.timedelta)
     domainTime = defaultdict(datetime.timedelta)
+    directBranching = defaultdict(lambda: 0)
+    indirectBranching = defaultdict(lambda: 0)
 
     for snapshot in snapshots:
         maxCount = max(maxCount, len(snapshot.tabs))
@@ -48,13 +50,22 @@ def tabHours(snapshots):
             snapshot_active += duration
             tabTime += duration * len(snapshot.tabs)
         tabHisto[len(snapshot.tabs)] += snapshot_active
+
+        # TODO wrong way to detect creation
+        tabs = filter(lambda tab: tab.status == 'loading', snapshot.tabs)
+        tabs = filter(lambda tab: tab.directSource() != None, tabs)
+        for tab in tabs:
+            directBranching[tab.directSource().domain] += 1
+            for source in tab.indirectSources():
+                indirectBranching[source.domain] += 1
             
-    return active, tabTime, maxCount, tabHisto, domainTime
+    return active, tabTime, maxCount, tabHisto, domainTime, directBranching, indirectBranching
 
 # TODO double check search url patterns
 def searches(snapshots, domain='google.com'):
     count = 0
     for snapshot in snapshots:
+        # TODO wrong way to detect creation
         tabs = filter(lambda tab: tab.status == 'loading', snapshot.tabs)
         tabs = filter(lambda tab: domain in tab.domain, tabs)
         tabs = filter(lambda tab: 'search' in tab.url, tabs)
@@ -62,8 +73,7 @@ def searches(snapshots, domain='google.com'):
 
     return count
 
-def printDeltaHisto(histo, base, label):
-    histo = [(count, delta.total_seconds()/base) for count, delta in histo]
+def printDeltaHisto(histo, label):
     histo = [(count, float('%.2f' % minutes)) for count, minutes in histo]
     for line in Pyasciigraph().graph(label, histo):
         print line
@@ -87,7 +97,7 @@ def main():
     print '-' * 44
 
     total = snapshots[-1].endTime - snapshots[0].time
-    active, tab, maxCount, tabHisto, domainHisto = tabHours(snapshots)
+    active, tab, maxCount, tabHisto, domainHisto, directBr, indirectBr = tabHours(snapshots)
     searchCount = searches(snapshots)
 
     print 'Log duration:\t\t', total
@@ -103,13 +113,27 @@ def main():
 
     tabHisto = tabHisto.items()
     tabHisto.sort(key=itemgetter(0), reverse=True)
-    printDeltaHisto(tabHisto, 0.01 * active.total_seconds(), 'Active % / Tab count')
+    tabHisto = [(count, 100 * delta.total_seconds()/active.total_seconds()) for count, delta in tabHisto]
+    printDeltaHisto(tabHisto, 'Active % / Tab count')
 
     print '-' * 44
 
     domainHisto = domainHisto.items()
     domainHisto.sort(key=itemgetter(1), reverse=True)
-    printDeltaHisto(domainHisto[:20], 0.01 * active.total_seconds(), 'Active % / Domain')
+    domainHisto = [(count, 100 * delta.total_seconds()/active.total_seconds()) for count, delta in domainHisto]
+    printDeltaHisto(domainHisto[:20], 'Active % / Domain')
+
+    print '-' * 44
+
+    directBr = directBr.items()
+    directBr.sort(key=itemgetter(1), reverse=True)
+    printDeltaHisto(directBr[:20], 'Direct branching count / Domain')
+
+    print '-' * 44
+
+    indirectBr = indirectBr.items()
+    indirectBr.sort(key=itemgetter(1), reverse=True)
+    printDeltaHisto(indirectBr[:20], 'Indirect branching count / Domain')
 
     print '-' * 44
 
