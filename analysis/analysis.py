@@ -62,8 +62,8 @@ def searches(snapshots, domain='google.com'):
 
     return count
 
-def printDeltaHisto(histo, label):
-    histo = [(count, delta.total_seconds()/60) for count, delta in histo]
+def printDeltaHisto(histo, base, label):
+    histo = [(count, delta.total_seconds()/base) for count, delta in histo]
     histo = [(count, float('%.2f' % minutes)) for count, minutes in histo]
     for line in Pyasciigraph().graph(label, histo):
         print line
@@ -103,13 +103,13 @@ def main():
 
     tabHisto = tabHisto.items()
     tabHisto.sort(key=itemgetter(0), reverse=True)
-    printDeltaHisto(tabHisto, 'Tab count / Active minutes')
+    printDeltaHisto(tabHisto, 0.01 * active.total_seconds(), 'Active % / Tab count')
 
     print '-' * 44
 
     domainHisto = domainHisto.items()
     domainHisto.sort(key=itemgetter(1), reverse=True)
-    printDeltaHisto(domainHisto[:5], 'Domain / Active minutes')
+    printDeltaHisto(domainHisto[:20], 0.01 * active.total_seconds(), 'Active % / Domain')
 
     print '-' * 44
 
