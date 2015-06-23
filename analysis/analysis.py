@@ -4,6 +4,7 @@ import cPickle as pickle
 from itertools import *
 
 from ascii_graph import Pyasciigraph
+from bokeh.plotting import figure, show, output_file, vplot
 
 from loaders import *
 from containers import *
@@ -32,13 +33,16 @@ def tabHours(snapshots):
     tabTime = datetime.timedelta()
     active = datetime.timedelta()
     maxCount = 0
+    maxWinCount = 0
     tabHisto = defaultdict(datetime.timedelta)
+    windowHisto = defaultdict(datetime.timedelta)
     domainTime = defaultdict(datetime.timedelta)
     directBranching = defaultdict(lambda: 0)
     indirectBranching = defaultdict(lambda: 0)
 
     for snapshot in snapshots:
         maxCount = max(maxCount, len(snapshot.tabs))
+        maxWinCount = max(maxWinCount, len(snapshot.windows))
         snapshot_active = datetime.timedelta()
         for this, next in izip(snapshot.focuses[:-1], snapshot.focuses[1:]):
             if this.windowId <= 0:
@@ -50,8 +54,8 @@ def tabHours(snapshots):
             snapshot_active += duration
             tabTime += duration * len(snapshot.tabs)
         tabHisto[len(snapshot.tabs)] += snapshot_active
+        windowHisto[len(snapshot.windows)] += snapshot_active
 
-        # TODO this is wrong, you need to use the navlogs to get the correct numbers?
         tabs = filter(lambda tab: tab.init, snapshot.tabs)
         tabs = filter(lambda tab: tab.directSource() != None, tabs)
         for tab in tabs:
@@ -59,7 +63,7 @@ def tabHours(snapshots):
             for source in tab.indirectSources():
                 indirectBranching[source.domain] += 1
             
-    return active, tabTime, maxCount, tabHisto, domainTime, directBranching, indirectBranching
+    return active, tabTime, maxCount, tabHisto, domainTime, directBranching, indirectBranching, maxWinCount, windowHisto
 
 # TODO double check search url patterns
 def searches(snapshots, domain='google.com'):
@@ -69,6 +73,8 @@ def searches(snapshots, domain='google.com'):
         tabs = filter(lambda tab: domain in tab.domain, tabs)
         tabs = filter(lambda tab: 'search' in tab.url, tabs)
         count += len(tabs)
+
+        snapshot.searchInit = len(tabs) > 0
 
     return count
 
@@ -99,7 +105,7 @@ def main():
     print '-' * 44
 
     total = snapshots[-1].endTime - snapshots[0].time
-    active, tab, maxCount, tabHisto, domainHisto, directBr, indirectBr = tabHours(snapshots)
+    active, tab, maxCount, tabHisto, domainHisto, directBr, indirectBr, maxWinCount, windowHisto = tabHours(snapshots)
     searchCount = searches(snapshots)
 
     print 'Log duration:\t\t', total
@@ -107,6 +113,7 @@ def main():
     print 'Active ratio:\t\t%.2f%%' % (100 * active.total_seconds() / total.total_seconds())
     print 'Tab duration:\t\t', tab
     print 'Max number of tabs:\t', maxCount
+    print 'Max number of windows:\t', maxWinCount
     print 'Average number of tabs:\t', tab.total_seconds() / active.total_seconds()
     print 'Number of searches:\t', searchCount
     print '1 search every:\t\t', active.total_seconds() / searchCount, 'seconds'
@@ -120,24 +127,40 @@ def main():
 
     print '-' * 44
 
+    windowHisto = windowHisto.items()
+    windowHisto.sort(key=itemgetter(0), reverse=True)
+    windowHisto = [(count, 100 * delta.total_seconds()/active.total_seconds()) for count, delta in windowHisto]
+    printDeltaHisto(windowHisto, 'Active % / Tab count')
+
+    print '-' * 44
+
     domainHisto = domainHisto.items()
     domainHisto.sort(key=itemgetter(1), reverse=True)
     domainHisto = [(count, 100 * delta.total_seconds()/active.total_seconds()) for count, delta in domainHisto]
-    printDeltaHisto(domainHisto[:20], 'Active % / Domain')
+    printDeltaHisto(domainHisto[:11], 'Active % / Domain')
 
     print '-' * 44
 
     directBr = directBr.items()
     directBr.sort(key=itemgetter(1), reverse=True)
-    printDeltaHisto(directBr[:20], 'Direct branching count / Domain')
+    printDeltaHisto(directBr[:11], 'Direct branching count / Domain')
 
     print '-' * 44
 
     indirectBr = indirectBr.items()
     indirectBr.sort(key=itemgetter(1), reverse=True)
-    printDeltaHisto(indirectBr[:20], 'Indirect branching count / Domain')
+    printDeltaHisto(indirectBr[:11], 'Indirect branching count / Domain')
 
     print '-' * 44
+
+    output_file("tabsovertime.html", title="# of tabs over time")
+    p1 = figure(x_axis_type = "datetime")
+    p1.line(map(attrgetter('time'), snapshots), map(lambda snapshot: len(snapshot.tabs), snapshots), legend='# of tabs', color='#00dd00')
+    p1.line(map(attrgetter('time'), snapshots), map(lambda snapshot: len(snapshot.windows), snapshots), legend='# of windows', color='#0000dd')
+    p1.line(map(attrgetter('time'), snapshots), map(lambda snapshot: snapshot.searchInit and 1 or -1, snapshots), legend='SEARCH', color='#dd0000')
+
+    show(vplot(p1))
+
 
 main()
 

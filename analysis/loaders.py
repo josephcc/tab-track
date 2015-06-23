@@ -22,9 +22,11 @@ def loadSnapshot(fn):
     snapshots.sort(key=attrgetter('time'))
     for tab in snapshots[0].tabs:
         tab.init = True
+    snapshots[0].windows = list(set(map(attrgetter('windowId'), snapshots[0].tabs)))
     for idx in range(len(snapshots) - 1):
         fr = snapshots[idx]
         to = snapshots[idx+1]
+        to.windows = list(set(map(attrgetter('windowId'), to.tabs)))
         for tab in to.tabs:
             tab.init = False
             if tab.status == 'complete':
