@@ -20,6 +20,8 @@ def loadSnapshot(fn):
             snapshots.append(Snapshot(rows))
 
     snapshots.sort(key=attrgetter('time'))
+    for tab in snapshots[0].tabs:
+        tab.init = True
     for idx in range(len(snapshots) - 1):
         fr = snapshots[idx]
         to = snapshots[idx+1]
@@ -32,8 +34,6 @@ def loadSnapshot(fn):
             if tab.status == 'loading':
                 if not fr.hasTab(tab.id) or fr.findTab(tab.id).url != tab.url:
                     tab.init = True
-
-
         fr.endTime = to.time
     # skip last record because it has no endTime
     snapshots.pop()
