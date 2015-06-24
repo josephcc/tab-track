@@ -114,10 +114,10 @@ def addFocusToSnapshots(snapshots, focuses):
     return snapshots
 
 
-def _getTabForIdTime(tabId, time, snapshots):
+def _getTabForIdTime(frTabId, toTabId, time, snapshots):
     index = bisect_left(snapshots, time)
     snapshots = snapshots[max(0, index-25) : min(len(snapshots)-1, index+25)]
-    snapshots = filter(lambda snapshot: snapshot.hasTab(tabId) and snapshot.findTab(tabId).init, snapshots)
+    snapshots = filter(lambda snapshot: snapshot.hasTab(toTabId) and snapshot.hasTab(frTabId) and snapshot.findTab(toTabId).init, snapshots)
 
     diffs = []
     for snapshot in snapshots:
@@ -128,15 +128,14 @@ def _getTabForIdTime(tabId, time, snapshots):
 
     if len(diffs) > 0:
         snapshot = snapshots[diffs[0][0]]
-        return snapshot, snapshot.findTab(tabId)
-    return None, None
+        return snapshot, snapshot.findTab(frTabId), snapshot.findTab(toTabId)
+    return None, None, None
     
 
 
 def addNavToSnapshots(snapshots, navs):
     for nav in navs:
-        frSnapshot, fr = _getTabForIdTime(nav.source, nav.time, snapshots)
-        toSnapshot, to = _getTabForIdTime(nav.target, nav.time, snapshots)
+        snapshot, fr, to  = _getTabForIdTime(nav.source, nav.target, nav.time, snapshots)
         if to != None and fr != None:
             to.source = fr
 
