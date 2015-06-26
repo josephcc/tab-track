@@ -15,6 +15,7 @@ takeSnapshot = (action) ->
         domainHash: CryptoJS.MD5(tab.domain).toString(CryptoJS.enc.Base64)
         tabId: tab.id
         snapshotId: snapshotId
+        time: time
       }, tab))
       
       saveTabs.push tabInfo
