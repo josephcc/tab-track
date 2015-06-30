@@ -36,10 +36,25 @@ html(lang='en')
             .col-sm-4
               button.download.all.btn.btn-lg.btn-success(type='button')
                 | Download your logs
-            .col-sm-4
+            .col-sm-5
+              .dropdown.dropdown-lg
+                button.btn.btn-lg.dropdown-toggle(type='button', data-toggle='dropdown')
+                  | no URLs, no domains
+                  span.caret
+                ul.dropdown-menu
+                  li
+                    a.menu-item(href='#')
+                      | no URLs or domains
+                  li
+                    a.menu-item.addDomain(href='#')
+                      | domains only, no URLs
+                  li
+                    a.menu-item.addUrl.addDomain(href='#')
+                      | URLs and domains
+            .col-sm-3
               button.btn.btn-lg.render.btn-info(type='button')
-                | Reload visualization
-            .col-sm-4
+                | Reload Viz
+            .col-sm-4(style='display: none;')
               button.database.kill.btn.btn-lg.btn-danger(type='button')
                 | Clear database
       .row

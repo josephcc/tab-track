@@ -1,3 +1,5 @@
+addDomain = false
+addUrl = false
 
 downloadCsv = (filename, cursor, attributes) ->
   out = ""
@@ -32,7 +34,11 @@ downloadCsv = (filename, cursor, attributes) ->
 
 
 $('.download.all').click () ->
-  attributes = ['snapshotId', 'windowId', 'tabId', 'openerTabId', 'index', 'status', 'action', 'domain', 'url', 'domainHash', 'urlHash', 'favIconUrl', 'time']
+  attributes = ['snapshotId', 'windowId', 'tabId', 'openerTabId', 'index', 'status', 'action', 'domainHash', 'urlHash', 'favIconUrl', 'time']
+  if addDomain
+    attributes.push('domain')
+  if addUrl
+    attributes.push('url')
   downloadCsv('tabLogs.csv', db.TabInfo.toCollection(), attributes)
 
   attributes = ['action', 'windowId', 'tabId', 'time']
@@ -49,6 +55,16 @@ $('.database.kill').click () ->
   db.clearDB().then () ->
     alert 'database deleted'
 
+$('.menu-item').click (event) ->
+  event.preventDefault()
+  item = $(this)
+  $('button.dropdown-toggle').text(item.text())
+  addDomain = false
+  addUrl = false
+  if item.hasClass('addDomain')
+    addDomain = true
+  if item.hasClass('addUrl')
+    addUrl = true
 
 lighten = (c, d) ->
   c = c * (1-d) + (255 * d)
