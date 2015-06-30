@@ -173,7 +173,8 @@ _render_branches = (tabs, _branches) ->
   for branch in _branches
     fromTab = getTabForIdTime(tabs, branch.from, branch.time)
     toTab = getTabForIdTime(tabs, branch.to, branch.time)
-    branches.push [toTab, fromTab]
+    if fromTab? and toTab?
+      branches.push [toTab, fromTab]
 
   plot._svg.selectAll('line.branch_down')
     .data(branches)
@@ -248,8 +249,6 @@ _render_tabs = (tabs) ->
     if newUrls.length > 0
       newUrlTabs = _.filter to, (tab) -> _.indexOf(newUrls, tab.url) >= 0
       favicons = favicons.concat(newUrlTabs)
-
-  console.log favicons
 
   plot.svg.selectAll('rect.tab')
       .data(tabs)
@@ -599,17 +598,26 @@ _setup_svg = () ->
     .attr('stroke', 'red')
     .attr('stroke-width', 0.5)
 
+numberOfTabs = 500
 
 render = () ->
-  Promise.all([
-    db.TabInfo.toArray()
-    db.FocusInfo.toArray()
-    db.NavInfo.toArray()
-  ]).spread (tabs, focus, branches) ->
+  Promise.try( () ->
+    return db.TabInfo.orderBy('time').limit(numberOfTabs).toArray()
+  ).then( (tabs) ->
+    return tabs[0].time
+  ).then( (time) ->
+    tabs = db.TabInfo.where('time').above(time).toArray()
+    focus = db.FocusInfo.where('time').above(time).toArray()
+    navs = db.NavInfo.where('time').above(time).toArray()
+    return [tabs, focus, navs]
+  ).spread (tabs, focus, branches) ->
+
     plot.start = tabs[0].time
     plot.end = tabs[tabs.length - 1].time
     plot.width = $('.render_container').width()
     plot.timeScale = plot.width / (plot.end - plot.start)
+
+    console.log plot
 
     console.log ' -- BEGIN RENDER -- '
 
