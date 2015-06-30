@@ -8,11 +8,12 @@ takeSnapshot = (action) ->
     console.log 'track - ' + action
     saveTabs = []
     for tab in tabs
+      domain = URI(tab.url).domain()
       tabInfo = new TabInfo(_.extend({
         action: action
-        domain: URI(tab.url).domain()
+        domain: domain
         urlHash: CryptoJS.MD5(tab.url).toString(CryptoJS.enc.Base64)
-        domainHash: CryptoJS.MD5(tab.domain).toString(CryptoJS.enc.Base64)
+        domainHash: CryptoJS.MD5(domain).toString(CryptoJS.enc.Base64)
         tabId: tab.id
         snapshotId: snapshotId
         time: time
