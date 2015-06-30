@@ -621,4 +621,4 @@ render = () ->
 
     console.log ' -- END   RENDER -- '
 
-#  $('.render_container').scrollLeft(plot.width)
+$(document).ready(render)
