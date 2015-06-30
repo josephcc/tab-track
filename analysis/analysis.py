@@ -50,7 +50,7 @@ def tabHours(snapshots):
             duration = next.time - this.time
             active += duration
             tab = snapshot.findTab(this.id)
-            domainTime[tab.domain] += duration
+            domainTime[tab.getDomain()] += duration
             snapshot_active += duration
             tabTime += duration * len(snapshot.tabs)
         tabHisto[len(snapshot.tabs)] += snapshot_active
@@ -59,9 +59,9 @@ def tabHours(snapshots):
         tabs = filter(lambda tab: tab.init, snapshot.tabs)
         tabs = filter(lambda tab: tab.directSource() != None, tabs)
         for tab in tabs:
-            directBranching[tab.directSource().domain] += 1
+            directBranching[tab.directSource().getDomain()] += 1
             for source in tab.indirectSources():
-                indirectBranching[source.domain] += 1
+                indirectBranching[source.getDomain()] += 1
             
     return active, tabTime, maxCount, tabHisto, domainTime, directBranching, indirectBranching, maxWinCount, windowHisto
 

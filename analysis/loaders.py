@@ -34,7 +34,7 @@ def loadSnapshot(fn):
                 if prevTab != None and prevTab.status in ('complete', 'done'):
                     tab.status = 'done'
             if tab.status == 'loading':
-                if not fr.hasTab(tab.id) or fr.findTab(tab.id).url != tab.url:
+                if (not fr.hasTab(tab.id)) or fr.findTab(tab.id).urlHash != tab.urlHash:
                     tab.init = True
         fr.endTime = to.time
     # skip last record because it has no endTime
@@ -114,9 +114,19 @@ def addFocusToSnapshots(snapshots, focuses):
     return snapshots
 
 
+def _getIdxForSnapshot(snapshot, snapshots):
+    index = bisect_left(snapshots, time)
+    start = max(0, index-25) 
+    end = min(len(snapshots)-1, index+25)
+    snapshots = snapshots[start:end]
+    _snapshotIdx = next(ifilter(lambda x: x[1].snapshotId == snapshot.snapshotId, enumerate(snapshots)))[0]
+    return _snapshotIdx + start
+
 def _getTabForIdTime(frTabId, toTabId, time, snapshots):
     index = bisect_left(snapshots, time)
-    snapshots = snapshots[max(0, index-25) : min(len(snapshots)-1, index+25)]
+    start = max(0, index-25) 
+    end = min(len(snapshots)-1, index+25)
+    snapshots = snapshots[start:end]
     snapshots = filter(lambda snapshot: snapshot.hasTab(toTabId) and snapshot.hasTab(frTabId) and snapshot.findTab(toTabId).init, snapshots)
 
     diffs = []
@@ -133,11 +143,21 @@ def _getTabForIdTime(frTabId, toTabId, time, snapshots):
     
 
 
+
 def addNavToSnapshots(snapshots, navs):
     for nav in navs:
         snapshot, fr, to  = _getTabForIdTime(nav.source, nav.target, nav.time, snapshots)
         if to != None and fr != None:
             to.source = fr
+            # propagate source info to future snapshots
+            snapshotIdx = next(ifilter(lambda x: x[1].snapshotId == snapshot.snapshotId, enumerate(snapshots)))[0]
+            for idx in range(snapshotIdx, len(snapshots)):
+                snapshot = snapshots[idx]
+                # this will fail to propagate on redirection, as init will be set in that case
+                #if (not snapshot.hasTab(nav.target)) or snapshot.findTab(nav.target).init:
+                if (not snapshot.hasTab(nav.target)):
+                    break
+                snapshot.findTab(nav.target).tabSource = fr
 
 def loadEverything(snapshotFn, focusFn, navFn):
     print >> sys.stderr, 'Loading tab logs...',

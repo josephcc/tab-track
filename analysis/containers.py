@@ -1,6 +1,7 @@
 import datetime
 from itertools import ifilter
 from operator import *
+from collections import Counter
 
 class Tab:
     def __init__(self, row):
@@ -10,7 +11,7 @@ class Tab:
         self.windowId = int(self.windowId)
         self.id = int(self.id)
         self.index = int(self.index)
-        if self.openerTabId == 'undefined':
+        if self.openerTabId == 'undefined' or self.openerTabId == 'null':
             self.openerTabId = -1
         else:
             self.openerTabId = int(self.openerTabId)
@@ -29,8 +30,25 @@ class Tab:
         source = ''
         if hasattr(self, 'source') and self.source != None:
             source = '\n    from: %s\n  ' % self.source
+        if not hasattr(self, 'init'):
+            self.init = False
         out = ('<Tab %d:%d %s: %s%s>%s' % (self.windowId, self.id, self.status, self.url, source, self.init and ' (new)' or '')).encode('utf8')
         return out
+
+    def getUrl(self):
+        if len(self.url.strip()) == 0:
+            url = self.urlHash
+        else:
+            url = self.url
+        return url
+
+    def getDomain(self):
+        if len(self.domain.strip()) == 0:
+            domain = self.domainHash
+        else:
+            domain = self.domain
+        return domain
+
 
 class Focus:
     def __init__(self, row):
@@ -56,14 +74,29 @@ class Nav:
 class Snapshot:
     def __init__(self, rows):
         self.tabs = map(Tab, rows)
-        self.fsck()
+        _idSet = set([])
+        # remove dup tabs
+        for idx in range(len(self.tabs)):
+            if self.tabs[idx].id in _idSet:
+                self.tabs[idx] = None
+            else:
+                _idSet.add(self.tabs[idx].id)
+        self.tabs = filter(lambda x: x != None, self.tabs)
+
         
         self.snapshotId = self.tabs[0].snapshotId
         self.time = self.tabs[0].time
+
+        # hotfix for Nathan's log
+        for tab in self.tabs:
+            tab.time = self.time
+
         self.endTime = None
         self.snapshotAction = self.tabs[0].snapshotAction
 
         self.tabs.sort(key=lambda tab: (tab.windowId, tab.index))
+
+        self.fsck()
 
     def __checkUniqueAttribute__(self, attr, objs):
         values = map(attrgetter(attr), objs)
@@ -83,6 +116,10 @@ class Snapshot:
             assert(hasattr(self, 'tabs'))
             for focus in self.focuses:
                 assert(self.hasTab(focus.id))
+
+        tabIdCounts = Counter(map(attrgetter('id'), self.tabs))
+        assert(tabIdCounts.most_common()[0][1] == 1)
+
 
     def duration(self):
         if not self.endTime:
