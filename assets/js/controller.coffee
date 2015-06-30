@@ -1,64 +1,53 @@
 
-downloadCsv = (filename, csv, spillfile) ->
+downloadCsv = (filename, cursor, attributes) ->
+  out = ""
   onInitFs = (fs) ->
     console.log('Opened file system: ' + fs.name)
     fsFilename = generateUUID() + '.csv'
-    fs.root.getFile(spillfile, {create: true}, (spillFileEntry) ->
+    fs.root.getFile(fsFilename, {create: true}, (fileEntry) ->
+      fileEntry.createWriter (writer) ->
+        writer.onwriteend = (e) ->
+          console.log('write done')
+          console.log fileEntry.toURL()
+          a = document.createElement('a')
+          a.href = fileEntry.toURL()
+          a.target ='_blank'
+          a.download = filename
+          a.click()
+        writer.write(new Blob([header2csv(attributes), out], {type: 'text/csv'}))
 
-      spillFileEntry.copyTo fs.root, fsFilename, () ->
-
-        fs.root.getFile(fsFilename, {create: false}, (fileEntry) ->
-          fileEntry.createWriter (writer) ->
-            writer.onwriteend = (e) ->
-              console.log('write done')
-              console.log fileEntry.toURL()
-              a = document.createElement('a')
-              a.href = fileEntry.toURL()
-              a.target ='_blank'
-              a.download = filename
-              a.click()
-            blob = new Blob([csv], {type: 'text/csv'})
-            writer.seek(writer.length)
-            writer.write(blob)
-
-            setTimeout( () ->
-              console.log 'removing tmp download file'
-              fs.root.getFile(fsFilename, {create: false}, (fileEntry) ->
-                fileEntry.remove(() ->
-                  console.log('File removed.')
-                , errorHandler)
-              , errorHandler)
-            , 10000)
-
+        setTimeout( () ->
+          console.log 'removing tmp download file'
+          fs.root.getFile(fsFilename, {create: false}, (fileEntry) ->
+            fileEntry.remove(() ->
+              console.log('File removed.')
+            , errorHandler)
           , errorHandler)
-
-      , errorHandler)
-  window.webkitRequestFileSystem(window.PERSISTENT, 50*1024*1024, onInitFs, errorHandler);
+        , 10000)
+    , errorHandler)
+  cursor.each (item, c) ->
+    out += object2csv(item, attributes)
+  .then () -> 
+    window.webkitRequestFileSystem(window.PERSISTENT, 50*1024*1024, onInitFs, errorHandler);
 
 
 $('.download.all').click () ->
-  tabs = TabInfo.db({type: 'tab'}).get()
-  attributes = ['snapshotId', 'windowId', 'id', 'openerTabId', 'index', 'status', 'snapshotAction', 'domain', 'url', 'domainHash', 'urlHash', 'favIconUrl', 'time']
-  csv = objects2csv(tabs, attributes)
-  downloadCsv('tabLogs.csv', csv, '_tabLogs.csv')
+  attributes = ['snapshotId', 'windowId', 'tabId', 'openerTabId', 'index', 'status', 'action', 'domain', 'url', 'domainHash', 'urlHash', 'favIconUrl', 'time']
+  downloadCsv('tabLogs.csv', db.TabInfo.toCollection(), attributes)
 
-  focuses = TabInfo.db({type: 'focus'}).get()
   attributes = ['action', 'windowId', 'tabId', 'time']
-  csv = objects2csv(focuses, attributes)
-  downloadCsv('focusLogs.csv', csv, '_focusLogs.csv')
+  downloadCsv('focusLogs.csv', db.FocusInfo.toCollection(), attributes)
 
-  navs = TabInfo.db({type: 'nav'}).get()
   attributes = ['from', 'to', 'time']
-  csv = objects2csv(navs, attributes)
-  downloadCsv('navLogs.csv', csv, '_navLogs.csv')
+  downloadCsv('navLogs.csv', db.NavInfo.toCollection(), attributes)
 
 $('.render').click () ->
   render()
 
 $('.database.kill').click () ->
   console.log "KILL DB"
-  TabInfo.clearDB()
-  alert 'database deleted'
+  db.clearDB().then () ->
+    alert 'database deleted'
 
 
 lighten = (c, d) ->
@@ -179,12 +168,11 @@ _render_timeline = () ->
     .attr("transform", "translate(0,32)")
     .call(plot.timeAxis)
 
-_render_branches = () ->
-  _branches = TabInfo.db({type: 'nav'}).get()
+_render_branches = (tabs, _branches) ->
   branches = []
   for branch in _branches
-    fromTab = getTabForIdTime(branch.from, branch.time)
-    toTab = getTabForIdTime(branch.to, branch.time)
+    fromTab = getTabForIdTime(tabs, branch.from, branch.time)
+    toTab = getTabForIdTime(tabs, branch.to, branch.time)
     branches.push [toTab, fromTab]
 
   plot._svg.selectAll('line.branch_down')
@@ -236,8 +224,7 @@ _render_branches = () ->
     .attr('stroke', plot.branchColor)
 
 
-_render_tabs = () ->
-  tabs = TabInfo.db({type: 'tab'}).get()
+_render_tabs = (tabs) ->
   snapshots = _.groupBy(tabs, (tab) -> tab.snapshotId)
   snapshots = _.values(snapshots)
   snapshots = _.sortBy(snapshots, (snapshot) -> snapshot[0].time)
@@ -281,7 +268,7 @@ _render_tabs = () ->
         getYForIndex(tab.globalIndex)
       )
       .attr('fill', (tab, index) ->
-        return plot.color(tab.id)
+        return plot.color(tab.tabId)
       )
 
   loadings = _.filter(tabs, (tab) -> tab.status == 'loading')
@@ -343,7 +330,7 @@ _render_tabs = () ->
     gravity: 'n',
     html: false,
     title: () ->
-      return "[" + this.__data__.id + "] " + this.__data__.url
+      return "[" + this.__data__.tabId + "] " + this.__data__.url
   )
   $('svg rect.search').tipsy(
     gravity: 'n',
@@ -351,12 +338,12 @@ _render_tabs = () ->
     title: () ->
       matches = this.__data__.url.match(/www\.google\.com\/.*q=(.*?)($|&)/)
       query = decodeURIComponent(matches[1].replace(/\+/g, ' '))
-      return "[" + this.__data__.id + "] Google: " + query
+      return "[" + this.__data__.tabId + "] Google: " + query
   )
 
 
-getTabForIdTime = (tabId, time) ->
-  tabs = TabInfo.db({type: 'tab', id: tabId}).get()
+getTabForIdTime = (tabs, tabId, time) ->
+  tabs = _.filter(tabs, (t) -> t.tabId == tabId)
   for tab in tabs
     tab.diff = Math.abs(time - tab.time)
 
@@ -369,13 +356,12 @@ getTabForIdTime = (tabId, time) ->
 orderTimeRange = (time1, time2) ->
   return [Math.min(time1, time2), Math.max(time1, time2)]
 
-getTabsForIdTimeRange = (tabId, time1, time2) ->
+getTabsForIdTimeRange = (tabs, tabId, time1, time2) ->
   [time1, time2] = orderTimeRange(time1, time2)
   tab1 = getTabForIdTime(tabId, time1)
   tab2 = getTabForIdTime(tabId, time2)
   if tab1? and tab2?
-    tabs = TabInfo.db({type: 'tab', id: tabId, time: {'>=': tab1.time, '<=': tab2.time}}).get()
-    return tabs
+    return _.chain(tabs).filter((t) -> t.tabId == tabId).filter((t) -> t.time >= tab1.time and t.time<= tab2.time)
   return []
 
 getXForTime = (time) ->
@@ -391,12 +377,11 @@ getWidthForTimeRange = (time1, time2) ->
   [time1, time2] = orderTimeRange(time1, time2)
   return getXForTime(time2) - getXForTime(time1)
 
-_render_focus = () ->
-  focuses = TabInfo.db({type: 'focus'}).get()
+_render_focus = (tabs, focuses) ->
   focuses = _.sortBy(focuses, 'time')
   _focuses = []
   for focus in focuses
-    tab = getTabForIdTime(focus.tabId, focus.time)
+    tab = getTabForIdTime(tabs, focus.tabId, focus.time)
     if tab
       focus.cy = getYForIndex(tab.globalIndex) + (plot.tabHeight / 2)
       focus.cx = getXForTime(focus.time)
@@ -409,7 +394,7 @@ _render_focus = () ->
   for transition in transitions
     focus1 = transition[0]
     focus2 = transition[1]
-    tabs = getTabsForIdTimeRange(focus1.tabId, focus1.time, focus2.time)
+    tabs = getTabsForIdTimeRange(tabs, focus1.tabId, focus1.time, focus2.time)
     if tabs.length == 1
       tabs = [$.extend(true, {},tabs[0]), $.extend(true, {},tabs[0])]
     last = null
@@ -616,20 +601,24 @@ _setup_svg = () ->
 
 
 render = () ->
-  tabs = TabInfo.db({type: 'tab'}).get()
-  plot.start = tabs[0].time
-  plot.end = tabs[tabs.length - 1].time
-  plot.width = $('.render_container').width()
-  plot.timeScale = plot.width / (plot.end - plot.start)
+  Promise.all([
+    db.TabInfo.toArray()
+    db.FocusInfo.toArray()
+    db.NavInfo.toArray()
+  ]).spread (tabs, focus, branches) ->
+    plot.start = tabs[0].time
+    plot.end = tabs[tabs.length - 1].time
+    plot.width = $('.render_container').width()
+    plot.timeScale = plot.width / (plot.end - plot.start)
 
-  console.log ' -- BEGIN RENDER -- '
+    console.log ' -- BEGIN RENDER -- '
 
-  _setup_svg()
-  _render_timeline()
-  _render_tabs()
-  _render_focus()
-  _render_branches()
+    _setup_svg()
+    _render_timeline()
+    _render_tabs(tabs)
+    _render_focus(tabs, focus)
+    _render_branches(tabs, branches)
 
-  console.log ' -- END   RENDER -- '
+    console.log ' -- END   RENDER -- '
 
 #  $('.render_container').scrollLeft(plot.width)

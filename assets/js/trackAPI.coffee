@@ -16,8 +16,107 @@ persistToFile = (filename, csv) ->
     , errorHandler)
   window.webkitRequestFileSystem(window.PERSISTENT, 50*1024*1024, onInitFs, errorHandler);
 
+window.db = new Dexie('tabTrack')
+db.version(1).stores({
+  TabInfo: '++id,action,snapshotId,time'
+  FocusInfo: '++id,tabId,time'
+  NavInfo: '++id,time'
+})
 
+window.TabInfo = (params) ->  
+  properties = _.extend({
+    windowId: -1
+    openerTabId: null
+    snapshotId: ''
+    tabId: -1
+    index: null
+    status: ''
+    pinned: false
+    favIconUrl: ''
+    active: false
+    globalIndex: -1
+    action: ''
+    domain: ''
+    url: ''
+    domainHash: ''
+    urlHash: ''
+    time: Date.now()
+  }, params)
+  this.windowId = properties.windowId
+  this.openerTabId = properties.openerTabId
+  this.snapshotId = properties.snapshotId
+  this.tabId = properties.tabId
+  this.index = properties.index
+  this.status = properties.status
+  this.pinned = properties.pinned
+  this.favIconUrl = properties.favIconUrl
+  this.active = properties.active
+  this.globalIndex = properties.globalIndex
+  this.action = properties.action
+  this.domain = properties.domain
+  this.url = properties.url
+  this.domainHash = properties.domainHash
+  this.urlHash = properties.urlHash
+  this.time = properties.time
+  
+TabInfo.prototype.save = () ->
+  self = this
+  db.TabInfo.put(this).then (id) ->
+    self.id = id
+    return self
+  
+window.FocusInfo = (params) ->  
+  properties = _.extend({
+    action: ''
+    windowId: -1
+    tabId: -1
+    time: Date.now()
+  }, params)
+  this.action = properties.action
+  this.windowId = properties.windowId
+  this.tabId = properties.tabId
+  this.time = properties.time
+  
+FocusInfo.prototype.save = () ->
+  self = this
+  db.FocusInfo.put(this).then (id) ->
+    self.id = id
+    return self
+
+window.NavInfo = (params) ->  
+  properties = _.extend({
+    from: -1
+    to: -1
+    time: Date.now()
+  }, params)
+  this.from = properties.from
+  this.to = properties.to
+  this.time = properties.time
+
+NavInfo.prototype.save = () ->
+  self = this
+  db.NavInfo.put(this).then (id) ->
+    self.id = id
+    return self
+
+db.NavInfo.mapToClass(window.NavInfo)
+db.FocusInfo.mapToClass(window.FocusInfo)
+db.TabInfo.mapToClass(window.TabInfo)
+db.clearDB = () ->
+  Promise.all([
+    db.TabInfo.clear()
+    db.FocusInfo.clear()
+    db.NavInfo.clear()
+  ])
+
+db.open()
+
+Dexie.Promise.on 'error', (err) ->
+  console.log(err)
+
+###
 throttle = null
+
 window.TabInfo = (() ->
   obj = {}
   obj.db = TAFFY()
@@ -118,3 +217,4 @@ window.TabInfo = (() ->
 
   return obj
 )()
+###

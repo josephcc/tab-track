@@ -8,22 +8,17 @@ takeSnapshot = (action) ->
     console.log 'track - ' + action
     saveTabs = []
     for tab in tabs
-      tab.type = 'tab'
-      tab.snapshotAction = action
-      tab.domain = URI(tab.url).domain()
-      tab.urlHash = CryptoJS.MD5(tab.url).toString(CryptoJS.enc.Base64)
-      tab.domainHash = CryptoJS.MD5(tab.domain).toString(CryptoJS.enc.Base64)
-      tab.snapshotId = snapshotId
-      tab.time = time
-
-      delete tab.width
-      delete tab.height
-      delete tab.selected
-      delete tab.highlighted
-      delete tab.incognito
-      delete tab.title
-
-      saveTabs.push tab
+      tabInfo = new TabInfo(_.extend({
+        action: action
+        domain: URI(tab.url).domain()
+        urlHash: CryptoJS.MD5(tab.url).toString(CryptoJS.enc.Base64)
+        domainHash: CryptoJS.MD5(tab.domain).toString(CryptoJS.enc.Base64)
+        tabId: tab.id
+        snapshotId: snapshotId
+        time: time
+      }, tab))
+      
+      saveTabs.push tabInfo
 
     compare = (x, y) ->
       if (x == y)
@@ -38,14 +33,14 @@ takeSnapshot = (action) ->
       tab.globalIndex = globalIndex++
     console.log saveTabs
 
-    TabInfo.db.insert(saveTabs)
+    tab.save() for tab in saveTabs
     console.log saveTabs
     console.log '========== END   SNAPSHOT =========='
 
 trackFocus = (action, windowId, tabId) ->
   console.log 'activated - ' + windowId + ':' + tabId
-  data = {type: 'focus', windowId: windowId, tabId: tabId, action: action, time: Date.now()}
-  TabInfo.db.insert(data)
+  data = new FocusInfo({windowId: windowId, tabId: tabId, action: action, time: Date.now()})
+  data.save()
 
 trackReplace = (removedTabId, addedTabId) ->
   console.log 'replaced - ' + addedTabId + ':' + removedTabId
@@ -85,5 +80,5 @@ chrome.tabs.onReplaced.addListener (addedTabId, removedTabId) ->
 
 chrome.webNavigation.onCreatedNavigationTarget.addListener (details) ->
   console.log 'nav: ' + details.sourceTabId + ' -> ' + details.tabId
-  data = {type: 'nav', from: details.sourceTabId, to: details.tabId, time: Date.now()}
-  TabInfo.db.insert(data)
+  data = new NavInfo({from: details.sourceTabId, to: details.tabId, time: Date.now()})
+  data.save()

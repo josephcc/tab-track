@@ -1,14 +1,12 @@
 
+header2csv = (attributes) ->
+  return '"' + attributes.join('","') + '"' + '\n'
 
-objects2csv = (objects, attributes) ->
-  csvData = new Array()
-  csvData.push '"' + attributes.join('","') + '"'
-  for object in objects
-    row = []
-    for attribute in attributes
-      row.push ("" + object[attribute]).replace(/\\/g, "\\\\").replace(/"/g, '\\"')
-    csvData.push '"' + row.join('","') + '"'
-  return csvData.join('\n') + '\n'
+object2csv = (object, attributes) ->
+  row = []
+  for attribute in attributes
+    row.push ("" + object[attribute]).replace(/\\/g, "\\\\").replace(/"/g, '\\"')
+  return '"' + row.join('","') + '"' + '\n'
 
 errorHandler = (e) ->
   msg = ''
