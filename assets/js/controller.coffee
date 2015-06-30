@@ -358,10 +358,10 @@ orderTimeRange = (time1, time2) ->
 
 getTabsForIdTimeRange = (tabs, tabId, time1, time2) ->
   [time1, time2] = orderTimeRange(time1, time2)
-  tab1 = getTabForIdTime(tabId, time1)
-  tab2 = getTabForIdTime(tabId, time2)
+  tab1 = getTabForIdTime(tabs, tabId, time1)
+  tab2 = getTabForIdTime(tabs, tabId, time2)
   if tab1? and tab2?
-    return _.chain(tabs).filter((t) -> t.tabId == tabId).filter((t) -> t.time >= tab1.time and t.time<= tab2.time)
+    return _.chain(tabs).filter((t) -> t.tabId == tabId).filter((t) -> t.time >= tab1.time and t.time<= tab2.time).value()
   return []
 
 getXForTime = (time) ->
@@ -394,20 +394,20 @@ _render_focus = (tabs, focuses) ->
   for transition in transitions
     focus1 = transition[0]
     focus2 = transition[1]
-    tabs = getTabsForIdTimeRange(tabs, focus1.tabId, focus1.time, focus2.time)
-    if tabs.length == 1
-      tabs = [$.extend(true, {},tabs[0]), $.extend(true, {},tabs[0])]
+    _tabs = getTabsForIdTimeRange(tabs, focus1.tabId, focus1.time, focus2.time)
+    if _tabs.length == 1
+      _tabs = [$.extend(true, {},_tabs[0]), $.extend(true, {},_tabs[0])]
     last = null
-    if tabs.length >= 2
-      cy = getYForIndex(tabs[0].globalIndex) + (plot.tabHeight / 2)
+    if _tabs.length >= 2
+      cy = getYForIndex(_tabs[0].globalIndex) + (plot.tabHeight / 2)
       cx = getXForTime(focus1.time)
       paths.push {x: cx, y: cy, active: focus1.windowId >= 0}
-      cy = getYForIndex(tabs[tabs.length-1].globalIndex) + (plot.tabHeight / 2)
+      cy = getYForIndex(_tabs[_tabs.length-1].globalIndex) + (plot.tabHeight / 2)
       cx = getXForTime(focus2.time)
       last = {x: cx, y: cy, active: focus1.windowId >= 0}
-      tabs.shift()
-      tabs.pop()
-    for tab in tabs
+      _tabs.shift()
+      _tabs.pop()
+    for tab in _tabs
       cy = getYForIndex(tab.globalIndex) + (plot.tabHeight / 2)
       cx = getXForTime(tab.time)
       paths.push {x: cx, y: cy, active: focus1.windowId >= 0}
