@@ -40,6 +40,7 @@ window.TabInfo = (params) ->
     url: ''
     domainHash: ''
     urlHash: ''
+    query: null
     time: Date.now()
   }, params)
   this.windowId = properties.windowId
@@ -58,6 +59,7 @@ window.TabInfo = (params) ->
   this.domainHash = properties.domainHash
   this.urlHash = properties.urlHash
   this.time = properties.time
+  this.query = properties.query
   
 TabInfo.prototype.save = () ->
   self = this

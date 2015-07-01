@@ -9,6 +9,15 @@ takeSnapshot = (action) ->
     saveTabs = []
     for tab in tabs
       domain = URI(tab.url).domain()
+      matches = tab.url.match(/www\.google\.com\/.*q=(.*?)($|&)/)
+      if matches?
+        query = decodeURIComponent(matches[1].replace(/\+/g, ' '))
+        query = query.split(' ')
+        query = _.map query, (kw) ->
+          return CryptoJS.MD5(kw).toString(CryptoJS.enc.Base64)
+        query = query.join(' ')
+      else
+        query = null
       tabInfo = new TabInfo(_.extend({
         action: action
         domain: domain
@@ -16,6 +25,7 @@ takeSnapshot = (action) ->
         domainHash: CryptoJS.MD5(domain).toString(CryptoJS.enc.Base64)
         tabId: tab.id
         snapshotId: snapshotId
+        query: query
         time: time
       }, tab))
       

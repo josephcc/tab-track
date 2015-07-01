@@ -34,7 +34,7 @@ downloadCsv = (filename, cursor, attributes) ->
 
 
 $('.download.all').click () ->
-  attributes = ['snapshotId', 'windowId', 'tabId', 'openerTabId', 'index', 'status', 'action', 'domainHash', 'urlHash', 'favIconUrl', 'time']
+  attributes = ['snapshotId', 'windowId', 'tabId', 'openerTabId', 'index', 'status', 'action', 'domainHash', 'urlHash', 'query', 'favIconUrl', 'time']
   if addDomain
     attributes.push('domain')
   if addUrl
