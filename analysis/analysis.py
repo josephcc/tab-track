@@ -48,6 +48,7 @@ def tabHours(snapshots):
             if this.windowId <= 0:
                 continue
             duration = next.time - this.time
+            # TODO detect idle here: duration too long within one snapshot -> no action
             active += duration
             tab = snapshot.findTab(this.id)
             domainTime[tab.getDomain()] += duration
