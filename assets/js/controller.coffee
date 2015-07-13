@@ -614,13 +614,13 @@ _setup_svg = () ->
     .attr('stroke', 'red')
     .attr('stroke-width', 0.5)
 
-numberOfTabs = 500
+numberOfTabs = 1000
 
 render = () ->
   Promise.try( () ->
-    return db.TabInfo.orderBy('time').limit(numberOfTabs).toArray()
+    return db.TabInfo.orderBy('time').reverse().limit(numberOfTabs).toArray()
   ).then( (tabs) ->
-    return tabs[0].time
+    return tabs[tabs.length - 1].time
   ).then( (time) ->
     tabs = db.TabInfo.where('time').above(time).toArray()
     focus = db.FocusInfo.where('time').above(time).toArray()
