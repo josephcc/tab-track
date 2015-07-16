@@ -42,3 +42,5 @@ analysis/data
 #python
 *.pyc
 *.pickle
+
+crx/*
