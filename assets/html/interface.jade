@@ -10,8 +10,8 @@ html(lang='en')
       title Tab Tracker
       // Bootstrap core CSS
       link(href='/vendor/bootstrap/dist/css/bootstrap.min.css', rel='stylesheet')
-      link(href='/dist/css/tipsy.css', rel='stylesheet')
-      link(href='/dist/css/timeline.css', rel='stylesheet')
+      link(href='/css/tipsy.css', rel='stylesheet')
+      link(href='/css/timeline.css', rel='stylesheet')
 
 
   body
@@ -19,7 +19,7 @@ html(lang='en')
       .jumbotron
         .row(style='display: flex; align-items: center;')
           .col-sm-4
-            image(src='/dist/img/tabtacular.png', style='width: 100%;')
+            image(src='/img/tabtacular.png', style='width: 100%;')
           .col-sm-8
             h1
               | Tab Tracker
@@ -62,25 +62,25 @@ html(lang='en')
           .render_container(style='width: 100%; overflow: scroll;')
 
       // Placed at the end of the document so the pages load faster
-      script(src='/dist/js/uuid.js')
-      script(src='/dist/vendor/jquery/dist/jquery.min.js')
-      script(src='/dist/js/jquery.tipsy.js')
-      script(src='/dist/vendor/bootstrap/dist/js/bootstrap.min.js')
-      script(src='/dist/vendor/d3/d3.min.js')
-      script(src='/dist/vendor/bluebird/js/browser/bluebird.min.js')
+      script(src='/js/uuid.js')
+      script(src='/vendor/jquery/dist/jquery.min.js')
+      script(src='/js/jquery.tipsy.js')
+      script(src='/vendor/bootstrap/dist/js/bootstrap.min.js')
+      script(src='/vendor/d3/d3.min.js')
+      script(src='/vendor/bluebird/js/browser/bluebird.min.js')
       
       //Angular Scripts
-      script(src="/dist/vendor/underscore/underscore-min.js")
-      script(src='/dist/vendor/uri.js/src/URI.min.js')
+      script(src="/vendor/underscore/underscore-min.js")
+      script(src='/vendor/uri.js/src/URI.min.js')
 
       //Scripts to access the tab information
-      script(src='/dist/js/fsUtils.js')
+      script(src='/js/fsUtils.js')
       script(src='/vendor/dexie/dist/latest/Dexie.min.js')
       //script(src='/vendor/dexie/addons/Dexie.Observable/Dexie.Observable.js')
-      script(src='/dist/js/trackAPI.js')
+      script(src='/js/trackAPI.js')
 
-      script(src='/dist/vendor/cryptojslib/rollups/md5.js')
-      script(src='/dist/vendor/pleasejs/dist/Please.js')
+      script(src='/vendor/cryptojslib/rollups/md5.js')
+      script(src='/vendor/pleasejs/dist/Please.js')
 
       //Finally Load the Angular Controller
-      script(src='/dist/js/controller.js')
+      script(src='/js/controller.js')

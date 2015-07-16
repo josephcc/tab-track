@@ -14,16 +14,16 @@
     "chrome://favicon/"
   ],
   "background": {
-    "page": "dist/html/background.html",
+    "page": "html/background.html",
     "persistent": true
   },
   "browser_action": {
-    "default_icon": "dist/img/structify_medium.png"
+    "default_icon": "img/structify_medium.png"
   },
   "icons": {
-    "16": "dist/img/structify_small.png",
-    "48": "dist/img/structify_medium.png",
-    "128": "dist/img/structify.png"
+    "16": "img/structify_small.png",
+    "48": "img/structify_medium.png",
+    "128": "img/structify.png"
   }
 
 }
