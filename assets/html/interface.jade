@@ -33,10 +33,10 @@ html(lang='en')
         br
         p
           .row.text-center
-            .col-sm-4
+            .col-sm-3
               button.download.all.btn.btn-lg.btn-success(type='button')
                 | Download your logs
-            .col-sm-5
+            .col-sm-3
               .dropdown.dropdown-lg
                 button.btn.btn-lg.dropdown-toggle(type='button', data-toggle='dropdown')
                   | no URLs, no domains
@@ -54,12 +54,25 @@ html(lang='en')
             .col-sm-3
               button.btn.btn-lg.render.btn-info(type='button')
                 | Reload Viz
-            .col-sm-4(style='display: none;')
-              button.database.kill.btn.btn-lg.btn-danger(type='button')
+            .col-sm-3
+              button.database.kill.btn.btn-lg.btn-danger(type='button', data-toggle="modal", data-target="#clearModal")
                 | Clear database
       .row
         .col-sm-12
           .render_container(style='width: 100%; overflow: scroll;')
+
+      .modal.fade#clearModal
+        .modal-dialog
+          .modal-content
+            .modal-header
+              button.close(type='button', data-dismiss='modal', aria-label='Close')
+                span(aria-hidden='true') &times;
+              h3.modal-title Clear Database 
+            .modal-body
+              p Are you sure you want to clear all of your tab log information (even though it has been anonymized)?
+            .modal-footer
+              button.btn.btn-default(type='button', data-dismiss='modal') Cancel 
+              button.btn.btn-danger(type='button')#clearDB Clear DB
 
       // Placed at the end of the document so the pages load faster
       script(src='/js/uuid.js')

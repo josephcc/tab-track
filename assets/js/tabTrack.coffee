@@ -4,8 +4,8 @@ takeSnapshot = (action) ->
   snapshotId = generateUUID()
   time = Date.now()
   chrome.tabs.query {windowType: 'normal'}, (tabs) ->
-    console.log '========== BEGIN SNAPSHOT =========='
-    console.log 'track - ' + action
+    Logger.debug '========== BEGIN SNAPSHOT =========='
+    Logger.debug 'track - ' + action
     saveTabs = []
     for tab in tabs
       domain = URI(tab.url).domain()
@@ -42,25 +42,25 @@ takeSnapshot = (action) ->
     globalIndex = 0
     for tab in saveTabs
       tab.globalIndex = globalIndex++
-    console.log saveTabs
+    Logger.debug saveTabs
 
     tab.save() for tab in saveTabs
     console.log saveTabs
     console.log '========== END   SNAPSHOT =========='
 
 trackFocus = (action, windowId, tabId) ->
-  console.log 'activated - ' + windowId + ':' + tabId
+  Logger.debug 'activated - ' + windowId + ':' + tabId
   data = new FocusInfo({windowId: windowId, tabId: tabId, action: action, time: Date.now()})
   data.save()
 
 trackReplace = (removedTabId, addedTabId) ->
-  console.log 'replaced - ' + addedTabId + ':' + removedTabId
+  Logger.debug 'replaced - ' + addedTabId + ':' + removedTabId
 #  data = {type: 'replace', from: removedTabId, to: addedTabId, time: Date.now()}
 #  TabInfo.db.insert(data)
 
 chrome.tabs.onUpdated.addListener (tabId, changeInfo, tab) ->
   if not changeInfo.status?
-    console.log changeInfo
+    Logger.debug changeInfo
     return
   # TODO: google doc pages will never finish loading
   if not changeInfo.url? and tab.url.match(/https:\/\/docs.google.com\/.*\/edit.*/)?
@@ -90,6 +90,6 @@ chrome.tabs.onReplaced.addListener (addedTabId, removedTabId) ->
   trackReplace(removedTabId, addedTabId)
 
 chrome.webNavigation.onCreatedNavigationTarget.addListener (details) ->
-  console.log 'nav: ' + details.sourceTabId + ' -> ' + details.tabId
+  Logger.debug 'nav: ' + details.sourceTabId + ' -> ' + details.tabId
   data = new NavInfo({from: details.sourceTabId, to: details.tabId, time: Date.now()})
   data.save()

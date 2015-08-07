@@ -4,7 +4,6 @@
 #
 ###
 
-
 persistToFile = (filename, csv) ->
   onInitFs = (fs) ->
     fs.root.getFile(filename, {create:true}, (fileEntry) ->
@@ -67,7 +66,7 @@ TabInfo.prototype.save = () ->
     self.id = id
     return self
   
-window.FocusInfo = (params) ->  
+window.FocusInfo = (params) ->
   properties = _.extend({
     action: ''
     windowId: -1
@@ -117,106 +116,72 @@ Dexie.Promise.on 'error', (err) ->
   console.log(err)
 
 ###
-throttle = null
-
-window.TabInfo = (() ->
+#
+# Global Application settings hash (that auto-updates in the backend and refreshes stuff elsewhere)
+#
+# AppSettings.on (setting..., func()) : 
+#   * Takes and array of settings, and a function. Will call the function when the setting is updated.
+#   * Note the special "setting", 'ready', that will be called when it has finished fetching the settings
+#   from chrome storage. 
+#
+# AppSettings.listSettings :
+#   * Returns an array of all of the different setting types 
+#
+# To add a new setting -- create a new entry in the 'settings' array, and then it will become available for use
+###
+window.AppSettings = (() ->
   obj = {}
-  obj.db = TAFFY()
-  #Lets us track which running version of this file is actually updating the DB
-  updateID = generateUUID()
-  updateFunction = null
+  settings = ['userID', 'trackURL', 'trackDomain', 'logLevel', 'autoSync'] #Add a setting name here to make it available for use
+  handlers = {}
+  get_val = _.map settings, (itm) ->
+    return 'setting-'+itm
 
-  _onDBChange = (_this) ->
-    console.log 'onDBChange exec'
-    size = TabInfo.db().get().length
-    console.log '  dbSize ' + size
-    if size > 1500
-      console.log 'persisting to file'
-      spillCount = size - 1500 + 250
-      console.log 'spilling ' + spillCount + ' records'
-      old = TabInfo.db().order('time asec').limit(spillCount).get()
-
-      tabs = _.filter(old, (e) -> e.type == 'tab')
-      if tabs.length > 0
-        attributes = ['snapshotId', 'windowId', 'id', 'openerTabId', 'index', 'status', 'snapshotAction', 'domain', 'url', 'domainHash', 'urlHash', 'favIconUrl', 'time']
-        tabCsv = objects2csv(tabs, attributes)
-        persistToFile('_tabLogs.csv', tabCsv)
-
-      focuses = _.filter(old, (e) -> e.type == 'focus')
-      if focuses.length > 0
-        attributes = ['action', 'windowId', 'tabId', 'time']
-        focusCsv = objects2csv(focuses, attributes)
-        persistToFile('_focusLogs.csv', focusCsv)
+  chrome.storage.local.get get_val, (items) ->
+    for own key, val of items
+      obj[key] = val
+    for handler in handlers.ready
+      handler.call(obj)
 
 
-      navs = _.filter(old, (e) -> e.type == 'nav')
-      if navs.length > 0
-        attributes = ['from', 'to', 'time']
-        navCsv = objects2csv(navs, attributes)
-        persistToFile('_navLogs.csv', navCsv)
+  for setting in settings
+    ((setting) ->
+      Object.defineProperty obj, setting, {
+        set: (value) ->
+          hsh = {}
+          hsh['setting-'+setting] = value
+          obj['setting-'+setting] = value
+          chrome.storage.local.set hsh, () ->
+            if handlers[setting]
+              for handler in handlers[setting]
+                handler.call()
 
-      TabInfo.db(old).remove()
+        get: () ->
+          return obj['setting-'+setting]
+      }
+    )(setting)
 
-    chrome.storage.local.set {'tabs': {db: _this, updateId: updateID}}
+  obj.on = (types..., func) ->
+    for type in types
+      console.log ("Invalid Event!") if settings.indexOf(type) < 0 && ['ready'].indexOf(type) < 0
+      if handlers[type]
+        handlers[type].push(func)
+      else
+        handlers[type] = [func]
 
-  settings =
-    cacheSize: 0
-    template: {}
-    onDBChange: () ->
-      console.log 'onDBChange throttle'
-      clearTimeout(throttle)
-      _this = this
-      _exec = () -> _onDBChange(_this)
-      throttle = setTimeout(_exec, 1500)
+  obj.listSettings = () ->
+    return settings
 
-  #Grab the info from localStorage and lets update it
   chrome.storage.onChanged.addListener (changes, areaName) ->
-    if changes.tabs?
-      if !changes.tabs.newValue?
-        obj.db = TAFFY()
-        obj.db.settings(settings)
-        updateFunction() if updateFunction?
-      else if changes.tabs.newValue.updateid != updateID
-        obj.db = TAFFY(changes.tabs.newValue.db, false)
-        obj.db.settings(settings)
-        updateFunction() if updateFunction?
-
-  chrome.storage.local.get 'tabs', (retVal) ->
-    if retVal.tabs?
-      obj.db = TAFFY(retVal.tabs.db)
-    obj.db.settings(settings)
-    updateFunction() if updateFunction?
-
-  obj.clearDB = () ->
-    chrome.storage.local.remove('tabs')
-    obj.db = TAFFY()
-    console.log 'deleting spill files'
-    window.webkitRequestFileSystem(window.PERSISTENT, 50*1024*1024, (fs) ->
-
-      fs.root.getFile('_tabLogs.csv', {create: false}, (fileEntry) ->
-        fileEntry.remove(() ->
-          console.log('File removed.')
-        , errorHandler)
-      , errorHandler)
-
-      fs.root.getFile('_focusLogs.csv', {create: false}, (fileEntry) ->
-        fileEntry.remove(() ->
-          console.log('File removed.')
-        , errorHandler)
-      , errorHandler)
-
-      fs.root.getFile('_navLogs.csv', {create: false}, (fileEntry) ->
-        fileEntry.remove(() ->
-          console.log('File removed.')
-        , errorHandler)
-      , errorHandler)
-
-
-    , errorHandler)
-
-  obj.db.settings(settings)
-  obj.updateFunction = (fn) -> updateFunction = fn
+    for own key, val of changes
+      if obj.hasOwnProperty(key)
+        obj[key] = val.newValue
 
   return obj
 )()
-###
+
+#If we are using the Logger extension -- make sure we grab its level from the settings, and set it up
+
+if Logger
+  Logger.useDefaults()
+  AppSettings.on 'logLevel', 'ready', (settings) ->
+    Logger.setLevel(AppSettings.logLevel)

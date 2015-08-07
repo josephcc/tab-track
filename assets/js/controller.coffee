@@ -50,10 +50,17 @@ $('.download.all').click () ->
 $('.render').click () ->
   render()
 
-$('.database.kill').click () ->
+$('#clearDB').click () ->
   console.log "KILL DB"
-  db.clearDB().then () ->
-    alert 'database deleted'
+  $("#clearModal .modal-body p").html("Clearing Database .... Please Wait")
+  $("#clearModal .modal-footer").html("")
+  Dexie.Promise.all([
+    db.TabInfo.clear()
+    db.FocusInfo.clear()
+    db.NavInfo.clear()
+  ]).then () ->
+    $('#clearModal').modal('hide')
+    alert "Database Cleared!"
 
 $('.menu-item').click (event) ->
   event.preventDefault()
