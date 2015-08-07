@@ -69,17 +69,10 @@ module.exports = function(grunt) {
 		registerDefinitions.default = function (grunt) { grunt.registerTask('default', []); };
 	}
 
-  grunt.loadNpmTasks('grunt-crx');
   grunt.initConfig({
     pkg: grunt.file.readJSON('package.json'),
-    manifest: grunt.file.readJSON('assets/manifest.json'),
-    crx: {
-        TabTrack: {
-            'src': 'dist/',
-            'dest': 'crx/'
-        }
-    }
-  });
+    manifest: grunt.file.readJSON('assets/manifest.json')
+  }); 
 
 	// Run task functions to configure Grunt.
 	invokeConfigFn(taskConfigurations);
