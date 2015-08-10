@@ -10,9 +10,15 @@
     "storage",
     "unlimitedStorage",
     "webNavigation",
-    "sessions",
     "chrome://favicon/"
   ],
+  "optional_permissions": [
+    "*://report-tabs.cmusocial.com/*",
+    "alarms"
+  ],
+  "externally_connectable": {
+    "matches": ["*://report-tabs.cmusocial.com/*"]
+  },
   "background": {
     "page": "html/background.html",
     "persistent": true

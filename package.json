@@ -1,14 +1,14 @@
 {
-  "name": "search-track",
-  "version": "0.0.1",
-  "description": "Helps you track, manage, and learn from your web searches",
+  "name": "Tab Tracker",
+  "version": "0.1",
+  "description": "Tracks tab usage in Chrome",
   "main": "Gruntfile.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/nhahn/search-track.git"
+    "url": "https://github.com/josephcc/tab-track.git"
   },
   "dependencies": {
     "grunt": "~0.4.0",
@@ -27,6 +27,7 @@
     "grunt-contrib-coffee": "~0.10.1",
     "grunt-contrib-jade": "~0.12.0",
     "grunt-sass": "~0.14.0",
+    "grunt-update-json": "^0.2.1",
     "jade": "~1.3.1"
   },
   "author": "nhahn",

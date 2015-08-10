@@ -25,19 +25,22 @@ html(lang='en')
               | Tab Tracker
         br
         p
-          | Thank you for participating in the browser tab usage study. Please
-          | click the first two buttons to download your tab usage logs from
-          | this Chrome extension. Before submitting the logs, you can review
-          | them in Excel and blackout columns that you do not wish to share
-          | with us. Please send your logs to josephcc@cmu.edu . Thank you!
+          | Thank you for participating in the browser tab usage study. Feel free to
+          | download your logs if you are interested in the of the data produced from
+          | this study. Additionally, use the second button to control what information
+          | you want sent during the study.
+        p(style="font-weight: bold")
+          | As a reminder, all data in this study is anonymous. Additionally, if you are
+          | concerned with us having data for a particular browsing session, this extension
+          | does not run in incognito mode. 
         br
         p
           .row.text-center
-            .col-sm-3
+            .col-sm-2
               button.download.all.btn.btn-lg.btn-success(type='button')
                 | Download your logs
-            .col-sm-3
-              .dropdown.dropdown-lg
+            .col-sm-3(style="margin-left: 2vw; margin-right: -2vw;")
+              .dropdown.dropdown-lg#urlPerms
                 button.btn.btn-lg.dropdown-toggle(type='button', data-toggle='dropdown')
                   | no URLs, no domains
                   span.caret
@@ -52,9 +55,13 @@ html(lang='en')
                     a.menu-item.addUrl.addDomain(href='#')
                       | URLs and domains
             .col-sm-3
+              button.btn.btn-lg.btn-default#autoUpload(type="button")
+                span.glyphicon.glyphicon-unchecked
+                | Auto-Upload Logs
+            .col-sm-2
               button.btn.btn-lg.render.btn-info(type='button')
                 | Reload Viz
-            .col-sm-3
+            .col-sm-2
               button.database.kill.btn.btn-lg.btn-danger(type='button', data-toggle="modal", data-target="#clearModal")
                 | Clear database
       .row

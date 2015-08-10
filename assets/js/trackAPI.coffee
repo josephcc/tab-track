@@ -3,26 +3,27 @@
 # API used for parsing the information stored in chrome.storage for searches
 #
 ###
+root = exports ? this
 
 persistToFile = (filename, csv) ->
   onInitFs = (fs) ->
     fs.root.getFile(filename, {create:true}, (fileEntry) ->
       fileEntry.createWriter( (writer) ->
-        blob = new Blob([csv], {type: 'text/csv'});
+        blob = new Blob([csv], {type: 'text/csv'})
         writer.seek(writer.length)
         writer.write(blob)
       , errorHandler)
     , errorHandler)
-  window.webkitRequestFileSystem(window.PERSISTENT, 50*1024*1024, onInitFs, errorHandler);
+  window.webkitRequestFileSystem(window.PERSISTENT, 50*1024*1024, onInitFs, errorHandler)
 
-window.db = new Dexie('tabTrack')
+root.db = new Dexie('tabTrack')
 db.version(1).stores({
   TabInfo: '++id,action,snapshotId,time'
   FocusInfo: '++id,tabId,time'
   NavInfo: '++id,time'
 })
 
-window.TabInfo = (params) ->  
+root.TabInfo = (params) ->
   properties = _.extend({
     windowId: -1
     openerTabId: null
@@ -64,9 +65,10 @@ TabInfo.prototype.save = () ->
   self = this
   db.TabInfo.put(this).then (id) ->
     self.id = id
+    checkSync(self)
     return self
   
-window.FocusInfo = (params) ->
+root.FocusInfo = (params) ->
   properties = _.extend({
     action: ''
     windowId: -1
@@ -82,9 +84,10 @@ FocusInfo.prototype.save = () ->
   self = this
   db.FocusInfo.put(this).then (id) ->
     self.id = id
+    checkSync(self)
     return self
 
-window.NavInfo = (params) ->  
+root.NavInfo = (params) ->  
   properties = _.extend({
     from: -1
     to: -1
@@ -98,11 +101,12 @@ NavInfo.prototype.save = () ->
   self = this
   db.NavInfo.put(this).then (id) ->
     self.id = id
+    checkSync(self)
     return self
 
-db.NavInfo.mapToClass(window.NavInfo)
-db.FocusInfo.mapToClass(window.FocusInfo)
-db.TabInfo.mapToClass(window.TabInfo)
+db.NavInfo.mapToClass(root.NavInfo)
+db.FocusInfo.mapToClass(root.FocusInfo)
+db.TabInfo.mapToClass(root.TabInfo)
 db.clearDB = () ->
   Promise.all([
     db.TabInfo.clear()
@@ -129,9 +133,16 @@ Dexie.Promise.on 'error', (err) ->
 #
 # To add a new setting -- create a new entry in the 'settings' array, and then it will become available for use
 ###
-window.AppSettings = (() ->
-  obj = {}
-  settings = ['userID', 'trackURL', 'trackDomain', 'logLevel', 'autoSync'] #Add a setting name here to make it available for use
+root.AppSettings = (() ->
+  #Define any defaults here
+  obj =
+    'setting-syncInterval': 7200000
+    'setting-autoSync': false
+    'setting-trackDomain': true
+    'setting-trackURL': true
+    'setting-retryInterval': 1200000
+  #Global settings
+  settings = ['userID', 'userSecret', 'trackURL', 'trackDomain', 'logLevel', 'autoSync', 'syncInterval', 'lastSync', 'syncProgress', 'retryInterval']
   handlers = {}
   get_val = _.map settings, (itm) ->
     return 'setting-'+itm
@@ -179,9 +190,51 @@ window.AppSettings = (() ->
   return obj
 )()
 
+# If AppSettings.autoSync is set, we will autmatically sync the information in our DB with our backend
+# in 2hr intervals (usually)
+checkSync = (item) ->
+  if AppSettings.autoSync and item.time - AppSettings.lastSync > AppSettings.syncInterval and chrome.extension.getBackgroundPage() == window
+    lastSync = AppSettings.lastSync
+    AppSettings.lastSync = Date.now()
+    worker = new Worker('/js/syncer.js')
+    getToken = null
+    if !AppSettings.userID
+      AppSettings.userSecret = generateUUID()
+      getToken = Promise.resolve($.ajax({
+        url: 'https://report-tabs.cmusocial.com/auth/newClient'
+        data: {secret: AppSettings.userSecret}
+        method: "POST"
+        contentType: 'application/json'
+        dataType: 'json'
+      })).then (res) ->
+        AppSettings.userID = res.user
+        return res
+    else
+      getToken = Promise.resolve($.ajax({
+        url: 'https://report-tabs.cmusocial.com/auth/getToken'
+        data: {secret: AppSettings.userSecret, user: AppSettings.userID}
+        method: "POST"
+        contentType: 'application/json'
+        dataType: 'json'
+      }))
+    getToken.then (res) ->
+      worker.postMessage({cmd: 'sync', token: res.token})
+      worker.addEventListener 'message', (msg) ->
+        switch msg.data.cmd
+          when 'syncFailed'
+            AppSettings.syncProgress = {status: 'failed', err: msg.data.err, lastSuccess: lastSync}
+            AppSetting.lastSync = Date.now() - AppSettings.syncInterval + AppSettings.retryInterval
+          when 'syncStatus'
+            AppSettings.syncProgress = {status: 'syncing', total: msg.data.total, stored: msg.data.stored}
+          when 'syncComplete'
+            AppSettings.syncProgress = {status: 'complete', time: Date.now()}
+    .catch (err) ->
+      worker.terminate()
+      Logger.error(err)
+        
 #If we are using the Logger extension -- make sure we grab its level from the settings, and set it up
 
-if Logger
+if Logger?
   Logger.useDefaults()
   AppSettings.on 'logLevel', 'ready', (settings) ->
     Logger.setLevel(AppSettings.logLevel)
