@@ -20,9 +20,13 @@ html(lang='en')
         .row(style='display: flex; align-items: center;')
           .col-sm-4
             image(src='/img/tabtacular.png', style='width: 100%;')
-          .col-sm-8
+          .col-sm-5
             h1
               | Tab Tracker
+          .col-sm-3#syncStatus
+            .progress
+              .progress-bar.progress-bar-warning(role='progressbar', aria-valuenow="10", aria-valuemin="0", aria-valuemax="10", style="width: 100%")
+            p(style="font-size: 16px") AutoSync Disabled
         br
         p
           | Thank you for participating in the browser tab usage study. Feel free to

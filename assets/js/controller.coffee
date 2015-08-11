@@ -26,7 +26,7 @@ downloadCsv = (filename, cursor, attributes) ->
     , errorHandler)
   cursor.each (item, c) ->
     out += object2csv(item, attributes)
-  .then () -> 
+  .then () ->
     window.webkitRequestFileSystem(window.PERSISTENT, 50*1024*1024, onInitFs, errorHandler)
 
 AppSettings.on 'ready', 'trackDomain', 'trackURL', (settings) ->
@@ -43,11 +43,33 @@ AppSettings.on 'ready', 'autoSync', (settings) ->
     $('#autoUpload').attr('aria-pressed', 'true')
     $('#autoUpload .glyphicon').removeClass('glyphicon-unchecked')
     $('#autoUpload .glyphicon').addClass('glyphicon-check')
+    $('#syncStatus p').text("Autosync Enabled")
+    $('#syncStatus .progress-bar').css('width', "0%")
   else
     $('#autoUpload').removeClass('active')
     $('#autoUpload').attr('aria-pressed', 'false')
     $('#autoUpload .glyphicon').removeClass('glyphicon-check')
     $('#autoUpload .glyphicon').addClass('glyphicon-unchecked')
+    $('#syncStatus .progress-bar').attr("class", "progress-bar progress-bar-warning")
+    $('#syncStatus .progress-bar').css('width', "100%")
+    $('#syncStatus p').text("Autosync Disabled")
+
+AppSettings.on 'ready', 'syncProgress', () ->
+  if AppSettings.autoSync
+    switch AppSettings.syncProgress.status
+      when 'failed'
+        $('#syncStatus .progress-bar').attr("class", "progress-bar progress-bar-danger")
+        $('#syncStatus .progress-bar').css('width', "100%")
+        $('#syncStatus p').text("Error Performing Sync")
+      when 'syncing'
+        $('#syncStatus .progress-bar').attr("class", "progress-bar progress-bar-info active progress-bar-striped")
+        width = (AppSettings.syncProgress.stored / AppSettings.syncProgress.total) * 100
+        $('#syncStatus .progress-bar').css('width', width + '%')
+        $('#syncStatus p').text("Syncing ...")
+      when 'complete'
+        $('#syncStatus .progress-bar').attr("class", "progress-bar progress-bar-success")
+        $('#syncStatus .progress-bar').css('width', "100%")
+        $('#syncStatus p').text("Sync Complete at " + (new Date(AppSettings.syncProgress.time)).toLocaleString())
 
 $("#autoUpload").click () ->
   permissions = {

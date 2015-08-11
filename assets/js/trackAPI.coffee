@@ -4,6 +4,7 @@
 #
 ###
 root = exports ? this
+TABSERVER = "http://localhost:8080" # "http://report-tabs.cmusocial.com" TODO set me to the right URL
 
 persistToFile = (filename, csv) ->
   onInitFs = (fs) ->
@@ -134,20 +135,23 @@ Dexie.Promise.on 'error', (err) ->
 # To add a new setting -- create a new entry in the 'settings' array, and then it will become available for use
 ###
 root.AppSettings = (() ->
+  return if !chrome?
   #Define any defaults here
   obj =
     'setting-syncInterval': 7200000
     'setting-autoSync': false
     'setting-trackDomain': true
     'setting-trackURL': true
-    'setting-retryInterval': 1200000
+    'setting-retryInterval': 10 #1200000 TODO reset me to the right retry interval
+    'setting-lastSync': new Date(0)
+    'setting-syncProgress': {}
   #Global settings
   settings = ['userID', 'userSecret', 'trackURL', 'trackDomain', 'logLevel', 'autoSync', 'syncInterval', 'lastSync', 'syncProgress', 'retryInterval']
   handlers = {}
-  get_val = _.map settings, (itm) ->
+  expandedSettings = _.map settings, (itm) ->
     return 'setting-'+itm
 
-  chrome.storage.local.get get_val, (items) ->
+  chrome.storage.local.get expandedSettings, (items) ->
     for own key, val of items
       obj[key] = val
     for handler in handlers.ready
@@ -158,6 +162,8 @@ root.AppSettings = (() ->
     ((setting) ->
       Object.defineProperty obj, setting, {
         set: (value) ->
+          if value instanceof Date
+            value = value.getTime()
           hsh = {}
           hsh['setting-'+setting] = value
           obj['setting-'+setting] = value
@@ -184,7 +190,7 @@ root.AppSettings = (() ->
 
   chrome.storage.onChanged.addListener (changes, areaName) ->
     for own key, val of changes
-      if obj.hasOwnProperty(key)
+      if expandedSettings.indexOf(key) >= 0
         obj[key] = val.newValue
 
   return obj
@@ -194,6 +200,7 @@ root.AppSettings = (() ->
 # in 2hr intervals (usually)
 checkSync = (item) ->
   if AppSettings.autoSync and item.time - AppSettings.lastSync > AppSettings.syncInterval and chrome.extension.getBackgroundPage() == window
+    Logger.info "Starting Sync"
     lastSync = AppSettings.lastSync
     AppSettings.lastSync = Date.now()
     worker = new Worker('/js/syncer.js')
@@ -201,34 +208,39 @@ checkSync = (item) ->
     if !AppSettings.userID
       AppSettings.userSecret = generateUUID()
       getToken = Promise.resolve($.ajax({
-        url: 'https://report-tabs.cmusocial.com/auth/newClient'
+        url: "#{TABSERVER}/auth/newClient"
         data: {secret: AppSettings.userSecret}
+        jsonp: false,
         method: "POST"
-        contentType: 'application/json'
         dataType: 'json'
       })).then (res) ->
         AppSettings.userID = res.user
         return res
     else
       getToken = Promise.resolve($.ajax({
-        url: 'https://report-tabs.cmusocial.com/auth/getToken'
+        url: "#{TABSERVER}/auth/getToken"
         data: {secret: AppSettings.userSecret, user: AppSettings.userID}
+        jsonp: false,
         method: "POST"
-        contentType: 'application/json'
         dataType: 'json'
       }))
     getToken.then (res) ->
-      worker.postMessage({cmd: 'sync', token: res.token})
+      Logger.debug "Token retreival successful"
+      worker.postMessage({cmd: 'sync', token: res.token, lastSync: lastSync})
       worker.addEventListener 'message', (msg) ->
         switch msg.data.cmd
           when 'syncFailed'
+            Logger.error "Sync failure #{msg.data.err}"
             AppSettings.syncProgress = {status: 'failed', err: msg.data.err, lastSuccess: lastSync}
             AppSetting.lastSync = Date.now() - AppSettings.syncInterval + AppSettings.retryInterval
           when 'syncStatus'
             AppSettings.syncProgress = {status: 'syncing', total: msg.data.total, stored: msg.data.stored}
           when 'syncComplete'
+            Logger.info "Sync Complete"
             AppSettings.syncProgress = {status: 'complete', time: Date.now()}
     .catch (err) ->
+      AppSettings.syncProgress = {status: 'failed', err: err, lastSuccess: lastSync}
+      AppSettings.lastSync = Date.now() - AppSettings.syncInterval + AppSettings.retryInterval
       worker.terminate()
       Logger.error(err)
         

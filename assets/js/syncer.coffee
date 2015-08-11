@@ -12,12 +12,13 @@ importScripts('/vendor/socket.io/socket.io.js')
 
 self.onmessage = (msg) ->
   #Messages from the initial scope
-  switch message.data.cmd
+  switch msg.data.cmd
     when 'sync'
-      performSync(message.data.token)
+      performSync(msg.data.token, msg.data.lastSync)
 
-performSync = (token) ->
-  socket = io('https://report-tabs.cmusocial.com:8080/sync', {
+performSync = (token, lastSync) ->
+  #socket = io('https://report-tabs.cmusocial.com:8080/sync', { TODO set me to the right server
+  socket = io('http://localhost:8080/sync', {
     'query': 'token=' + token
     reconnectionAttempts: 5
     timeout: 10
@@ -35,50 +36,45 @@ performSync = (token) ->
   socket.on 'error', (err) ->
     reportErr(err)
  
-  query1 = db.TabInfo.where('time').aboveOrEqual('AppSettings.lastSync')
-  query2 = db.FocusInfo.where('time').aboveOrEqual('AppSettings.lastSync')
-  query3 = db.NavInfo.where('time').aboveOrEqual('AppSettings.lastSync')
-  Promise.all([query1.count(), query2.count(), query3.count()]).spread (tabCnt, focusCnt, navCnt) ->
-    stored1 = stored2 = stored3 = 0
-    socket.on 'stored', (res) ->
-      switch res.type
-        when 'TabInfo' then stored1 = res.packet
-        when 'FocusInfo' then stored2 = res.packet
-        when 'NavInfo' then stored3 = res.packet
+  tables = ['TabInfo', 'FocusInfo', 'NavInfo']
+  queries = []
+  for table in tables
+    queries.push(db[table].where('time').aboveOrEqual(lastSync))
+  Promise.all(_.map(queries, (q) -> q.count())).then (counts) ->
+    stored = _.object(_.map(tables, (t) -> [t, 0]))
     
+    socket.on 'stored', (res) ->
+      stored[res.type] = res.packet
+      console.log("Stored #{res.type} #{res.packet}")
+
     #Every 5 seconds, post a message, updating our sync status
     statusUpdateTimeout = setTimeout( () ->
-      self.postMessage({cmd: 'syncStatus', total: tabCnt+focusCnt+navCnt, stored: stored1+stored2+stored3})
+      self.postMessage({cmd: 'syncStatus', total: _.reduce(counts, ((m, n) -> m + n), 0), stored: _.reduce(counts, ((m, v) -> m + v), 0)})
     , 5000)
 
     socket.on 'syncErr', (err) ->
       reportErr(err)
 
-    navComplete = tabComplete = focusComplete = false
+    complete = _.object(_.map(tables, (t) -> [t, false]))
     socket.on 'complete', (res) ->
-      switch res.type
-        when 'TabInfo' then tabComplete = true
-        when 'FocusInfo' then focusComplete = true
-        when 'NavInfo' then navComplete = true
-      if tabComplete and navComplete and focusComplete
+      complete[res.type] = true
+      console.log(res)
+      if _.reduce(complete, ((m, v) -> m and v), true) 
         socket.disconnect()
         clearInterval(statusUpdateTimeout)
         self.postMessage({cmd: 'syncComplete'})
         self.close()
 
-    num1 = num2 = num3 = 0
-    query1.each (record) ->
-      socket.emit 'TabInfoSync', {packet: ++num1, data: record}
-    .then () ->
-      socket.emit 'TabInfoSync', {action: 'complete'}
-    query2.each (record) ->
-      socket.emit 'FocusInfoSync', {packet: ++num2, data: record}
-    .then () ->
-      socket.emit 'FocusInfoSync', {action: 'complete'}
-    query3.each (record) ->
-      socket.emit 'NavInfoSync', {packet: ++num3, data: record}
-    .then () ->
-      socket.emit 'NavInfoSync', {action: 'complete'}
+    Promise.all(_.map(queries, (q) ->
+      cnt = 0
+      q.each (record) ->
+        socket.emit q._ctx.table.name+'Sync', {packet: ++cnt, data: record}
+      .then () ->
+        socket.emit q._ctx.table.name+'Sync', {action: 'complete'}
+    )).then () ->
+      console.log("Send complete!")
+  .catch (err) ->
+    reportErr(err)
 
 reportErr = (err) ->
   self.postMessage({cmd: 'syncFailed', err: err})
