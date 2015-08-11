@@ -148,8 +148,7 @@ root.AppSettings = (() ->
   #Global settings
   settings = ['userID', 'userSecret', 'trackURL', 'trackDomain', 'logLevel', 'autoSync', 'syncInterval', 'lastSync', 'syncProgress', 'retryInterval']
   handlers = {}
-  expandedSettings = _.map settings, (itm) ->
-    return 'setting-'+itm
+  expandedSettings = _.map settings, (itm) -> 'setting-'+itm
 
   chrome.storage.local.get expandedSettings, (items) ->
     for own key, val of items
@@ -168,9 +167,6 @@ root.AppSettings = (() ->
           hsh['setting-'+setting] = value
           obj['setting-'+setting] = value
           chrome.storage.local.set hsh, () ->
-            if handlers[setting]
-              for handler in handlers[setting]
-                handler.call()
 
         get: () ->
           return obj['setting-'+setting]
@@ -192,6 +188,9 @@ root.AppSettings = (() ->
     for own key, val of changes
       if expandedSettings.indexOf(key) >= 0
         obj[key] = val.newValue
+        if handlers[key.substring(8)]
+          for handler in handlers[key.substring(8)]
+            handler.call()
 
   return obj
 )()
@@ -232,9 +231,10 @@ checkSync = (item) ->
           when 'syncFailed'
             Logger.error "Sync failure #{msg.data.err}"
             AppSettings.syncProgress = {status: 'failed', err: msg.data.err, lastSuccess: lastSync}
-            AppSetting.lastSync = Date.now() - AppSettings.syncInterval + AppSettings.retryInterval
+            AppSettings.lastSync = Date.now() - AppSettings.syncInterval + AppSettings.retryInterval
           when 'syncStatus'
             AppSettings.syncProgress = {status: 'syncing', total: msg.data.total, stored: msg.data.stored}
+            Logger.info "Sync progress #{Math.floor((msg.data.stored / msg.data.total) * 100)} %"
           when 'syncComplete'
             Logger.info "Sync Complete"
             AppSettings.syncProgress = {status: 'complete', time: Date.now()}

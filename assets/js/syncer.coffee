@@ -45,12 +45,11 @@ performSync = (token, lastSync) ->
     
     socket.on 'stored', (res) ->
       stored[res.type] = res.packet
-      console.log("Stored #{res.type} #{res.packet}")
 
     #Every 5 seconds, post a message, updating our sync status
-    statusUpdateTimeout = setTimeout( () ->
-      self.postMessage({cmd: 'syncStatus', total: _.reduce(counts, ((m, n) -> m + n), 0), stored: _.reduce(counts, ((m, v) -> m + v), 0)})
-    , 5000)
+    statusUpdateTimeout = setInterval( () ->
+      self.postMessage({cmd: 'syncStatus', total: _.reduce(counts, ((m, n) -> m + n), 0), stored: _.reduce(stored, ((m, v) -> m + v), 0)})
+    , 3000)
 
     socket.on 'syncErr', (err) ->
       reportErr(err)
@@ -58,7 +57,6 @@ performSync = (token, lastSync) ->
     complete = _.object(_.map(tables, (t) -> [t, false]))
     socket.on 'complete', (res) ->
       complete[res.type] = true
-      console.log(res)
       if _.reduce(complete, ((m, v) -> m and v), true) 
         socket.disconnect()
         clearInterval(statusUpdateTimeout)
@@ -77,5 +75,5 @@ performSync = (token, lastSync) ->
     reportErr(err)
 
 reportErr = (err) ->
-  self.postMessage({cmd: 'syncFailed', err: err})
+  self.postMessage({cmd: 'syncFailed', err: err.message})
   self.close()
