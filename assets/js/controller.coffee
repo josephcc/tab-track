@@ -707,4 +707,11 @@ render = () ->
 
     console.log ' -- END   RENDER -- '
 
-$(document).ready(render)
+$(document).ready(() ->
+  #Open a model if this is the first time using the extension 
+  curURI = URI(document.location.href)
+  #This is the installation forced opening
+  if curURI.search(true)['reason'] == 'installed'
+    $('#firstTimeModal').modal('show')
+  render()
+)

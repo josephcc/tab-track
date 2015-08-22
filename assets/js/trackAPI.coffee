@@ -37,8 +37,8 @@ root.TabInfo = (params) ->
     active: false
     globalIndex: -1
     action: ''
-    domain: ''
     url: ''
+    domain: ''
     domainHash: ''
     urlHash: ''
     query: null
@@ -143,16 +143,19 @@ root.AppSettings = (() ->
     'setting-trackDomain': true
     'setting-trackURL': true
     'setting-retryInterval': 10 #1200000 TODO reset me to the right retry interval
-    'setting-lastSync': new Date(0)
+    'setting-syncStop': new Date(0)
+    'setting-nextSync': Date.now()
     'setting-syncProgress': {}
   #Global settings
-  settings = ['userID', 'userSecret', 'trackURL', 'trackDomain', 'logLevel', 'autoSync', 'syncInterval', 'lastSync', 'syncProgress', 'retryInterval']
+  settings = ['userID', 'userSecret', 'trackURL', 'trackDomain', 'logLevel', 'autoSync', 'syncInterval', 'syncStop', 'nextSync', 'syncProgress', 'retryInterval', 'encryptionKey']
   handlers = {}
   expandedSettings = _.map settings, (itm) -> 'setting-'+itm
+  ready = false #Let us know if we are ready yet -- if we already are, go ahead and call any new ready handlers
 
   chrome.storage.local.get expandedSettings, (items) ->
     for own key, val of items
       obj[key] = val
+    ready = true
     for handler in handlers.ready
       handler.call(obj)
 
@@ -176,6 +179,7 @@ root.AppSettings = (() ->
   obj.on = (types..., func) ->
     for type in types
       console.log ("Invalid Event!") if settings.indexOf(type) < 0 && ['ready'].indexOf(type) < 0
+      return func(this) if type == "ready" and ready #If we have already loaded everything, just call the ready event already
       if handlers[type]
         handlers[type].push(func)
       else
@@ -198,10 +202,10 @@ root.AppSettings = (() ->
 # If AppSettings.autoSync is set, we will autmatically sync the information in our DB with our backend
 # in 2hr intervals (usually)
 checkSync = (item) ->
-  if AppSettings.autoSync and item.time - AppSettings.lastSync > AppSettings.syncInterval and chrome.extension.getBackgroundPage() == window
+  if AppSettings.autoSync and item.time > AppSettings.nextSync and chrome.extension.getBackgroundPage() == window
     Logger.info "Starting Sync"
-    lastSync = AppSettings.lastSync
-    AppSettings.lastSync = Date.now()
+    nextSync = AppSettings.nextSync
+    AppSettings.nextSync = Date.now() + AppSettings.syncInterval
     worker = new Worker('/js/syncer.js')
     getToken = null
     if !AppSettings.userID
@@ -225,22 +229,25 @@ checkSync = (item) ->
       }))
     getToken.then (res) ->
       Logger.debug "Token retreival successful"
-      worker.postMessage({cmd: 'sync', token: res.token, lastSync: lastSync})
+      worker.postMessage({cmd: 'sync', token: res.token, syncStop: res.lastSync})
       worker.addEventListener 'message', (msg) ->
         switch msg.data.cmd
           when 'syncFailed'
             Logger.error "Sync failure #{msg.data.err}"
-            AppSettings.syncProgress = {status: 'failed', err: msg.data.err, lastSuccess: lastSync}
-            AppSettings.lastSync = Date.now() - AppSettings.syncInterval + AppSettings.retryInterval
+            AppSettings.syncProgress = {status: 'failed', err: msg.data.err, lastSuccess: AppSettings.syncStop}
+            AppSettings.nextSync = Date.now() + AppSettings.retryInterval
           when 'syncStatus'
             AppSettings.syncProgress = {status: 'syncing', total: msg.data.total, stored: msg.data.stored}
+            AppSettings.syncStop = msg.data.stoppedPoint
             Logger.info "Sync progress #{Math.floor((msg.data.stored / msg.data.total) * 100)} %"
           when 'syncComplete'
             Logger.info "Sync Complete"
             AppSettings.syncProgress = {status: 'complete', time: Date.now()}
+            AppSettings.syncStop = msg.data.stoppedPoint
+            AppSettings.nextSync = Date.now() + AppSettings.syncInterval
     .catch (err) ->
-      AppSettings.syncProgress = {status: 'failed', err: err, lastSuccess: lastSync}
-      AppSettings.lastSync = Date.now() - AppSettings.syncInterval + AppSettings.retryInterval
+      AppSettings.syncProgress = {status: 'failed', err: err, lastSuccess: AppSettings.syncStop}
+      AppSettings.nextSync = Date.now() + AppSettings.retryInterval
       worker.terminate()
       Logger.error(err)
         

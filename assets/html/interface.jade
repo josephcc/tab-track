@@ -84,6 +84,58 @@ html(lang='en')
             .modal-footer
               button.btn.btn-default(type='button', data-dismiss='modal') Cancel 
               button.btn.btn-danger(type='button')#clearDB Clear DB
+      
+      .modal.fade#firstTimeModal
+        .modal-dialog.modal-lg(role="document")
+          .modal-content
+            .modal-header
+              button.close(type='button', data-dismiss='modal', aria-label='Close')
+                span(aria-hidden='true') &times;
+              h3.modal-title Thanks for Installing! 
+            .modal-body
+              p Thank your for installing the tab tracker extension. The data we collect will be invaluable for helping us improve the way individuals interact with and navigate the web. If you have any questions about this extension, feel free to email #[a(href="mailto:nhahn@cs.cmu.edu?Subject=Tab%20Tracker") nhahn@cs.cmu.edu]
+              hr
+              p Just so you understand how information is passed to us and what information is sent to use, we have provided this diagram below:
+              .row
+                .col-sm-4(style="text-align: center;")
+                  img(src="/img/install/browsing.svg", style="height: 150px")
+                .col-sm-8
+                  .row
+                    h5 As you browse the internet (not in incognito mode), your <b>browser</b> will record:
+                  .row
+                    .col-sm-6(style="text-align: center;")
+                      img(src="/img/install/tabs.svg", style="height: 46px")
+                    .col-sm-6
+                      p When tabs are active, created, closed, and moved
+                  .row
+                    .col-sm-6(style="text-align: center;")
+                      p(style="font-weight: bold; font-size: 1.45rem;") https://facebook.com/profile/tab-user
+                    .col-sm-6
+                      p Any websites you visit
+                  .row
+                    .col-sm-6(style="text-align: center;")
+                      img(src="/img/install/clock.svg", style="height: 60px")
+                    .col-sm-6
+                      p How long you spend on each website, and how long a tab is active for
+              .row(style="margin-top: 20px")
+                .col-sm-4
+                  h5 Any URL information is immediately encryped for privacy, with the encryption key remaining on your computer
+                .col-sm-8
+                  .row
+                    .col-sm-4
+                      p http://facebook.com
+                      p http://google.com
+                      p http://cnn.com
+                    .col-sm-4(style="text-align: center;")
+                      img(src="/img/install/lock.svg", style="height: 70px;")
+                      img(src="/img/install/key.svg", style="height: 30px;position: absolute;top: 2.9rem;display: block;transform: scaleX(-1);left: 8rem;")
+                    .col-sm-4
+                      p A4DF45KRO
+                      p BPRKG93MS
+                      p QE472CMDL
+            .modal-footer
+              button.btn.btn-default(type='button', data-dismiss='modal') Close 
+
 
       // Placed at the end of the document so the pages load faster
       script(src='/js/uuid.js')
@@ -106,5 +158,13 @@ html(lang='en')
       script(src='/vendor/cryptojslib/rollups/md5.js')
       script(src='/vendor/pleasejs/dist/Please.js')
 
+      //Include our ScrollMagic stuff
+      script(src='/vendor/gsap/src/minified/TweenMax.min.js')
+      script(src='/vendor/ScrollMagic/scrollmagic/minified/ScrollMagic.min.js')
+      script(src='/vendor/ScrollMagic/scrollmagic/minified/plugins/animation.gsap.min.js')
+
       //Finally Load the Angular Controller
       script(src='/js/controller.js')
+
+
+
