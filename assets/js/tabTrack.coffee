@@ -9,6 +9,7 @@ takeSnapshot = (action) ->
   snapshotId = generateUUID()
   time = Date.now()
   chrome.tabs.query {windowType: 'normal'}, (tabs) ->
+
     Logger.debug '========== BEGIN SNAPSHOT =========='
     Logger.debug 'track - ' + action
     AppSettings.on 'ready', () ->
@@ -35,6 +36,19 @@ takeSnapshot = (action) ->
           query: query
           time: time
         }, tab))
+        saveTabs.push tabInfo
+
+      if tabs.length == 0
+        tabInfo = new TabInfo({
+          action: 'allTabClosed'
+          domain: null
+          urlHash: null
+          domainHash: null
+          tabId: null
+          snapshotId: snapshotId
+          query: null
+          time: time
+        })
         saveTabs.push tabInfo
 
       saveTabs.sort (x, y) ->

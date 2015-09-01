@@ -141,9 +141,6 @@ def _getTabForIdTime(frTabId, toTabId, time, snapshots):
         return snapshot, snapshot.findTab(frTabId), snapshot.findTab(toTabId)
     return None, None, None
     
-
-
-
 def addNavToSnapshots(snapshots, navs):
     for nav in navs:
         snapshot, fr, to  = _getTabForIdTime(nav.source, nav.target, nav.time, snapshots)
