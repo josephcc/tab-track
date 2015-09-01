@@ -20,24 +20,31 @@ html(lang='en')
         .row(style='display: flex; align-items: center;')
           .col-sm-4
             image(src='/img/tabtacular.png', style='width: 100%;')
-          .col-sm-8
+          .col-sm-5
             h1
               | Tab Tracker
+          .col-sm-3#syncStatus
+            .progress
+              .progress-bar.progress-bar-warning(role='progressbar', aria-valuenow="10", aria-valuemin="0", aria-valuemax="10", style="width: 100%")
+            p(style="font-size: 16px") AutoSync Disabled
         br
         p
-          | Thank you for participating in the browser tab usage study. Please
-          | click the first two buttons to download your tab usage logs from
-          | this Chrome extension. Before submitting the logs, you can review
-          | them in Excel and blackout columns that you do not wish to share
-          | with us. Please send your logs to josephcc@cmu.edu . Thank you!
+          | Thank you for participating in the browser tab usage study. Feel free to
+          | download your logs if you are interested in the of the data produced from
+          | this study. Additionally, use the second button to control what information
+          | you want sent during the study.
+        p(style="font-weight: bold")
+          | As a reminder, all data in this study is anonymous. Additionally, if you are
+          | concerned with us having data for a particular browsing session, this extension
+          | does not run in incognito mode. 
         br
         p
           .row.text-center
-            .col-sm-4
+            .col-sm-2
               button.download.all.btn.btn-lg.btn-success(type='button')
                 | Download your logs
-            .col-sm-5
-              .dropdown.dropdown-lg
+            .col-sm-3(style="margin-left: 2vw; margin-right: -2vw;")
+              .dropdown.dropdown-lg#urlPerms
                 button.btn.btn-lg.dropdown-toggle(type='button', data-toggle='dropdown')
                   | no URLs, no domains
                   span.caret
@@ -52,14 +59,83 @@ html(lang='en')
                     a.menu-item.addUrl.addDomain(href='#')
                       | URLs and domains
             .col-sm-3
+              button.btn.btn-lg.btn-default#autoUpload(type="button")
+                span.glyphicon.glyphicon-unchecked
+                | Auto-Upload Logs
+            .col-sm-2
               button.btn.btn-lg.render.btn-info(type='button')
                 | Reload Viz
-            .col-sm-4(style='display: none;')
-              button.database.kill.btn.btn-lg.btn-danger(type='button')
+            .col-sm-2
+              button.database.kill.btn.btn-lg.btn-danger(type='button', data-toggle="modal", data-target="#clearModal")
                 | Clear database
       .row
         .col-sm-12
           .render_container(style='width: 100%; overflow: scroll;')
+
+      .modal.fade#clearModal
+        .modal-dialog
+          .modal-content
+            .modal-header
+              button.close(type='button', data-dismiss='modal', aria-label='Close')
+                span(aria-hidden='true') &times;
+              h3.modal-title Clear Database 
+            .modal-body
+              p Are you sure you want to clear all of your tab log information (even though it has been anonymized)?
+            .modal-footer
+              button.btn.btn-default(type='button', data-dismiss='modal') Cancel 
+              button.btn.btn-danger(type='button')#clearDB Clear DB
+      
+      .modal.fade#firstTimeModal
+        .modal-dialog.modal-lg(role="document")
+          .modal-content
+            .modal-header
+              button.close(type='button', data-dismiss='modal', aria-label='Close')
+                span(aria-hidden='true') &times;
+              h3.modal-title Thanks for Installing! 
+            .modal-body
+              p Thank your for installing the tab tracker extension. The data we collect will be invaluable for helping us improve the way individuals interact with and navigate the web. If you have any questions about this extension, feel free to email #[a(href="mailto:nhahn@cs.cmu.edu?Subject=Tab%20Tracker") nhahn@cs.cmu.edu]
+              hr
+              p Just so you understand how information is passed to us and what information is sent to use, we have provided this diagram below:
+              .row
+                .col-sm-4(style="text-align: center;")
+                  img(src="/img/install/browsing.svg", style="height: 150px")
+                .col-sm-8
+                  .row
+                    h5 As you browse the internet (not in incognito mode), your <b>browser</b> will record:
+                  .row
+                    .col-sm-6(style="text-align: center;")
+                      img(src="/img/install/tabs.svg", style="height: 46px")
+                    .col-sm-6
+                      p When tabs are active, created, closed, and moved
+                  .row
+                    .col-sm-6(style="text-align: center;")
+                      p(style="font-weight: bold; font-size: 1.45rem;") https://facebook.com/profile/tab-user
+                    .col-sm-6
+                      p Any websites you visit
+                  .row
+                    .col-sm-6(style="text-align: center;")
+                      img(src="/img/install/clock.svg", style="height: 60px")
+                    .col-sm-6
+                      p How long you spend on each website, and how long a tab is active for
+              .row(style="margin-top: 20px")
+                .col-sm-4
+                  h5 Any URL information is immediately encryped for privacy, with the encryption key remaining on your computer
+                .col-sm-8
+                  .row
+                    .col-sm-4
+                      p http://facebook.com
+                      p http://google.com
+                      p http://cnn.com
+                    .col-sm-4(style="text-align: center;")
+                      img(src="/img/install/lock.svg", style="height: 70px;")
+                      img(src="/img/install/key.svg", style="height: 30px;position: absolute;top: 2.9rem;display: block;transform: scaleX(-1);left: 8rem;")
+                    .col-sm-4
+                      p A4DF45KRO
+                      p BPRKG93MS
+                      p QE472CMDL
+            .modal-footer
+              button.btn.btn-default(type='button', data-dismiss='modal') Close 
+
 
       // Placed at the end of the document so the pages load faster
       script(src='/js/uuid.js')
@@ -82,5 +158,13 @@ html(lang='en')
       script(src='/vendor/cryptojslib/rollups/md5.js')
       script(src='/vendor/pleasejs/dist/Please.js')
 
+      //Include our ScrollMagic stuff
+      script(src='/vendor/gsap/src/minified/TweenMax.min.js')
+      script(src='/vendor/ScrollMagic/scrollmagic/minified/ScrollMagic.min.js')
+      script(src='/vendor/ScrollMagic/scrollmagic/minified/plugins/animation.gsap.min.js')
+
       //Finally Load the Angular Controller
       script(src='/js/controller.js')
+
+
+

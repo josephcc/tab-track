@@ -18,6 +18,9 @@
     "pleasejs": "~0.4.2",
     "bluebird": "~2.9.6",
     "dexie": "~1.0.4",
-    "angular-dexie-bind": "nhahn/angular-dexie-bind"
+    "angular-dexie-bind": "nhahn/angular-dexie-bind",
+    "js-logger": "~1.0.0",
+    "ScrollMagic": "~2.0.5",
+    "gsap": "~1.17.0"
   }
 }

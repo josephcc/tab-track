@@ -1,6 +1,3 @@
-addDomain = false
-addUrl = false
-
 downloadCsv = (filename, cursor, attributes) ->
   out = ""
   onInitFs = (fs) ->
@@ -29,15 +26,71 @@ downloadCsv = (filename, cursor, attributes) ->
     , errorHandler)
   cursor.each (item, c) ->
     out += object2csv(item, attributes)
-  .then () -> 
-    window.webkitRequestFileSystem(window.PERSISTENT, 50*1024*1024, onInitFs, errorHandler);
+  .then () ->
+    window.webkitRequestFileSystem(window.PERSISTENT, 50*1024*1024, onInitFs, errorHandler)
 
+AppSettings.on 'ready', 'trackDomain', 'trackURL', (settings) ->
+  if AppSettings.trackDomain and AppSettings.trackURL
+    $('#urlPerms button.dropdown-toggle').text("URLs and domains")
+  else if AppSettings.trackDomain
+    $('#urlPerms button.dropdown-toggle').text("domains only, no URLs")
+  else
+    $('#urlPerms button.dropdown-toggle').text("no URLs or domains")
+
+AppSettings.on 'ready', 'autoSync', (settings) ->
+  if AppSettings.autoSync
+    $('#autoUpload').addClass('active')
+    $('#autoUpload').attr('aria-pressed', 'true')
+    $('#autoUpload .glyphicon').removeClass('glyphicon-unchecked')
+    $('#autoUpload .glyphicon').addClass('glyphicon-check')
+    $('#syncStatus p').text("Autosync Enabled")
+    $('#syncStatus .progress-bar').css('width', "0%")
+  else
+    $('#autoUpload').removeClass('active')
+    $('#autoUpload').attr('aria-pressed', 'false')
+    $('#autoUpload .glyphicon').removeClass('glyphicon-check')
+    $('#autoUpload .glyphicon').addClass('glyphicon-unchecked')
+    $('#syncStatus .progress-bar').attr("class", "progress-bar progress-bar-warning")
+    $('#syncStatus .progress-bar').css('width', "100%")
+    $('#syncStatus p').text("Autosync Disabled")
+
+AppSettings.on 'ready', 'syncProgress', () ->
+  if AppSettings.autoSync
+    switch AppSettings.syncProgress.status
+      when 'failed'
+        $('#syncStatus .progress-bar').attr("class", "progress-bar progress-bar-danger")
+        $('#syncStatus .progress-bar').css('width', "100%")
+        $('#syncStatus p').text("Error Performing Sync")
+      when 'syncing'
+        $('#syncStatus .progress-bar').attr("class", "progress-bar progress-bar-info active progress-bar-striped")
+        width = (AppSettings.syncProgress.stored / AppSettings.syncProgress.total) * 100
+        $('#syncStatus .progress-bar').css('width', width + '%')
+        $('#syncStatus p').text("Syncing ...")
+      when 'complete'
+        $('#syncStatus .progress-bar').attr("class", "progress-bar progress-bar-success")
+        $('#syncStatus .progress-bar').css('width', "100%")
+        $('#syncStatus p').text("Sync Complete at " + (new Date(AppSettings.syncProgress.time)).toLocaleString())
+
+$("#autoUpload").click () ->
+  permissions = {
+    origins: ["*://report-tabs.cmusocial.com/*"]
+  }
+  if !AppSettings.autoSync
+    chrome.permissions.request permissions, (granted) ->
+      if granted
+        AppSettings.autoSync = true
+      else
+        alert 'Autosync cannot be enabled if these permissions are not accepted'
+  else
+    chrome.permissions.remove permissions, (removed) ->
+      if removed
+        AppSettings.autoSync = false
 
 $('.download.all').click () ->
   attributes = ['snapshotId', 'windowId', 'tabId', 'openerTabId', 'index', 'status', 'action', 'domainHash', 'urlHash', 'query', 'favIconUrl', 'time']
-  if addDomain
+  if AppSettings.trackDomain
     attributes.push('domain')
-  if addUrl
+  if AppSettings.trackURL
     attributes.push('url')
   downloadCsv('tabLogs.csv', db.TabInfo.toCollection(), attributes)
 
@@ -50,21 +103,30 @@ $('.download.all').click () ->
 $('.render').click () ->
   render()
 
-$('.database.kill').click () ->
+$('#clearDB').click () ->
   console.log "KILL DB"
-  db.clearDB().then () ->
-    alert 'database deleted'
+  $("#clearModal .modal-body p").html("Clearing Database .... Please Wait")
+  $("#clearModal .modal-footer").html("")
+  Dexie.Promise.all([
+    db.TabInfo.clear()
+    db.FocusInfo.clear()
+    db.NavInfo.clear()
+  ]).then () ->
+    $('#clearModal').modal('hide')
+    alert "Database Cleared!"
 
-$('.menu-item').click (event) ->
+$('#urlPerms .menu-item').click (event) ->
+  $('#urlPerms .dropdown').dropdown('toggle')
   event.preventDefault()
   item = $(this)
-  $('button.dropdown-toggle').text(item.text())
-  addDomain = false
-  addUrl = false
   if item.hasClass('addDomain')
-    addDomain = true
+    AppSettings.trackDomain = true
+  else
+    AppSettings.trackDomain = false
   if item.hasClass('addUrl')
-    addUrl = true
+    AppSettings.trackURL = true
+  else
+    AppSettings.trackURL = false
 
 lighten = (c, d) ->
   c = c * (1-d) + (255 * d)
@@ -645,4 +707,11 @@ render = () ->
 
     console.log ' -- END   RENDER -- '
 
-$(document).ready(render)
+$(document).ready(() ->
+  #Open a model if this is the first time using the extension 
+  curURI = URI(document.location.href)
+  #This is the installation forced opening
+  if curURI.search(true)['reason'] == 'installed'
+    $('#firstTimeModal').modal('show')
+  render()
+)
