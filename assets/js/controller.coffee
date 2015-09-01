@@ -37,6 +37,19 @@ AppSettings.on 'ready', 'trackDomain', 'trackURL', (settings) ->
   else
     $('#urlPerms button.dropdown-toggle').text("no URLs or domains")
 
+AppSettings.on 'ready', 'logLevel', (settings) ->
+  switch AppSettings.logLevel.name
+    when 'DEBUG' then $('#logLevel button').html("Console Level: DEBUG <span class='caret'></span>")
+    when 'INFO' then $('#logLevel button').html("Console Level: INFO <span class='caret'></span>")
+    when 'WARN' then $('#logLevel button').html("Console Level: WARN <span class='caret'></span>")
+    when 'ERROR' then $('#logLevel button').html("Console Level: ERROR <span class='caret'></span>")
+
+$('#logLevel .menu-item').click (event) ->
+  event.preventDefault()
+  $('#logLevel .dropdown').dropdown('toggle')
+  item = $(this)
+  AppSettings.logLevel = Logger[item.data('level')]
+
 AppSettings.on 'ready', 'autoSync', (settings) ->
   if AppSettings.autoSync
     $('#autoUpload').addClass('active')

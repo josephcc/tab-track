@@ -16,6 +16,7 @@ chrome.runtime.onMessageExternal.addListener (request, sender, sendResponse) ->
         AppSettings.userSecret = generateUUID()
         sendResponse({cmd: 'newClient', secret: AppSettings.userSecret})
     when "saveID" then AppSettings.userID = request.user
+    when "detect" then sendResponse({autoSync: AppSettings.autoSync})
 
 syncConnection = (port, syncStop) ->
   worker = new Worker('/js/syncer.js')
@@ -57,5 +58,14 @@ syncConnection = (port, syncStop) ->
 
 decryptionConnection = (port) ->
   port.onMessage.addListener (msg) ->
-    decrypted = CryptoJS.AES.decrypt(msg.encrypted, AppSettings.encryptionKey).toString()
-    port.postMessage({decrypted: decrypted})
+    item = msg.payload
+    err = null
+    for field in msg.fields
+      try
+        item[field] = CryptoJS.AES.decrypt(item[field], AppSettings.encryptionKey).toString()
+      catch err
+        err = err
+    if err
+      port.postMessage({cmd: 'decryptionError', partial: item, err: err})
+    else
+      port.postMessage({cmd: 'decrypted', decrypted: item})

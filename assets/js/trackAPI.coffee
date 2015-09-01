@@ -4,7 +4,7 @@
 #
 ###
 root = exports ? this
-TABSERVER = "http://localhost:8080" # "http://report-tabs.cmusocial.com" TODO set me to the right URL
+TABSERVER = "https://report-tabs.cmusocial.com" #"http://localhost:8080" TODO set me to the right URL
 
 persistToFile = (filename, csv) ->
   onInitFs = (fs) ->
@@ -68,6 +68,8 @@ TabInfo.prototype.save = () ->
     self.id = id
     checkSync(self)
     return self
+  .catch (err) ->
+    Logger.error(err)
   
 root.FocusInfo = (params) ->
   properties = _.extend({
@@ -87,6 +89,8 @@ FocusInfo.prototype.save = () ->
     self.id = id
     checkSync(self)
     return self
+  .catch (err) ->
+    Logger.error(err)
 
 root.NavInfo = (params) ->  
   properties = _.extend({
@@ -104,6 +108,8 @@ NavInfo.prototype.save = () ->
     self.id = id
     checkSync(self)
     return self
+  .catch (err) ->
+    Logger.error(err)
 
 db.NavInfo.mapToClass(root.NavInfo)
 db.FocusInfo.mapToClass(root.FocusInfo)
@@ -118,7 +124,7 @@ db.clearDB = () ->
 db.open()
 
 Dexie.Promise.on 'error', (err) ->
-  console.log(err)
+  Logger.error(err)
 
 ###
 #
@@ -142,10 +148,11 @@ root.AppSettings = (() ->
     'setting-autoSync': false
     'setting-trackDomain': true
     'setting-trackURL': true
-    'setting-retryInterval': 10 #1200000 TODO reset me to the right retry interval
+    'setting-retryInterval': 300000 #TODO reset me to the right retry interval
     'setting-syncStop': new Date(0)
     'setting-nextSync': Date.now()
     'setting-syncProgress': {}
+    'setting-logLevel': {value: 4, name: 'WARN'}
   #Global settings
   settings = ['userID', 'userSecret', 'trackURL', 'trackDomain', 'logLevel', 'autoSync', 'syncInterval', 'syncStop', 'nextSync', 'syncProgress', 'retryInterval', 'encryptionKey']
   handlers = {}

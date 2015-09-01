@@ -47,8 +47,8 @@ takeSnapshot = (action) ->
       Logger.debug saveTabs
 
       tab.save() for tab in saveTabs
-      console.log saveTabs
-      console.log '========== END   SNAPSHOT =========='
+      Logger.debug saveTabs
+      Logger.debug '========== END   SNAPSHOT =========='
 
 trackFocus = (action, windowId, tabId) ->
   Logger.debug 'activated - ' + windowId + ':' + tabId

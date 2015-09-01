@@ -21,12 +21,12 @@ self.onmessage = (msg) ->
       performSync(msg.data.token, msg.data.syncStop, msg.data.external)
 
 performSync = (token, lastStop, external) ->
-  #socket = io('https://report-tabs.cmusocial.com:8080/sync', { TODO set me to the right server
   unless external
-    socket = io('http://localhost:8080/sync', {
+    #socket = io('http://localhost:8080/sync', {
+    socket = io('wss://report-tabs.cmusocial.com:8443/sync', {
+      transports: ['websocket']
       'query': 'token=' + token
       reconnectionAttempts: 5
-      timeout: 10
     })
     socket.on 'error', (err) ->
       reportErr(err)
@@ -37,17 +37,9 @@ performSync = (token, lastStop, external) ->
     else
       socket.emit(dest, message)
 
-  ### Do we need these?
-  socket.on 'reconnect_failed', (err) ->
-    reportErr(err)
-  socket.on 'reconnect_error', (err) ->
-    reportErr(err)
-  socket.on 'connect_error', (err) ->
-    reportErr(err)
-  socket.on 'connect_timeout', (err) ->
-    reportErr(err)
-  ###
-  
+  #Do we need these?
+  socket.on 'reconnect_failed', (err) -> reportErr({message: "Socket.io reconnect failure"})
+
   tables = ['TabInfo', 'FocusInfo', 'NavInfo']
   queries = []
   for table in tables
