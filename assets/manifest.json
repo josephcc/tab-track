@@ -3,7 +3,7 @@
   "key": "kejapkicnmepadkcknbobflnbbhlilfn",
   "name": "Tab Tracker",
   "description": "Track tab usage",
-  "version": "0.1",
+  "version": "0.1.1",
   "permissions": [
     "tabs",
     "activeTab",
