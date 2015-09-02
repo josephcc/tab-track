@@ -1,6 +1,6 @@
 {
-  "name": "Tab Tracker",
-  "version": "0.1",
+  "name": "TabTracker",
+  "version": "0.0.1",
   "description": "Tracks tab usage in Chrome",
   "main": "Gruntfile.js",
   "scripts": {
