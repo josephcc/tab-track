@@ -25,6 +25,7 @@ takeSnapshot = (action) ->
           query = query.join(' ')
         else
           query = null
+        tab.favIconUrl = CryptoJS.AES.encrypt(tab.favIconUrl, AppSettings.encryptionKey).toString()
         tabInfo = new TabInfo(_.extend({
           action: action
           domain: domain
