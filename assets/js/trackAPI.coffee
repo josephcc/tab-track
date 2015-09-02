@@ -4,8 +4,8 @@
 #
 ###
 root = exports ? this
-#TABSERVER = "https://report-tabs.cmusocial.com" #TODO set me to the right URL
-TABSERVER = "http://localhost:8080"
+TABSERVER = "https://report-tabs.cmusocial.com" #TODO set me to the right URL
+#TABSERVER = "http://localhost:8080"
 
 persistToFile = (filename, csv) ->
   onInitFs = (fs) ->
@@ -146,7 +146,7 @@ root.AppSettings = (() ->
   #Define any defaults here
   obj =
     'setting-syncInterval': 7200000
-    'setting-autoSync': false
+    'setting-autoSync': true
     'setting-trackDomain': true
     'setting-trackURL': true
     'setting-retryInterval': 300000 #TODO reset me to the right retry interval

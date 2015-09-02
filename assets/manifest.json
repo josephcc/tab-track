@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
-  "key": "kejapkicnmepadkcknbobflnbbhlilfn",
   "name": "Tab Tracker",
+  "key": "pjlloikackppnoiffdfomhjeoejpigoi",
   "description": "Track tab usage",
   "version": "0.1",
   "permissions": [
@@ -10,10 +10,10 @@
     "storage",
     "unlimitedStorage",
     "webNavigation",
-    "chrome://favicon/"
+    "chrome://favicon/",
+    "*://report-tabs.cmusocial.com/*"
   ],
   "optional_permissions": [
-    "*://report-tabs.cmusocial.com/*",
     "alarms"
   ],
   "externally_connectable": {
