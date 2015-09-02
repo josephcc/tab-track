@@ -1,6 +1,6 @@
 {
-  "name": "Tab Tracker",
-  "version": "0.1",
+  "name": "TabTracker",
+  "version": "0.1.1",
   "description": "Tracks tab usage in Chrome",
   "main": "Gruntfile.js",
   "scripts": {
@@ -33,9 +33,9 @@
   "author": "nhahn",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/nhahn/search-track/issues"
+    "url": "https://github.com/nhahn/tab-track/issues"
   },
-  "homepage": "https://github.com/nhahn/search-track",
+  "homepage": "https://report-tabs.cmusocial.com",
   "devDependencies": {
     "grunt-crx": "~0.3.4"
   }
