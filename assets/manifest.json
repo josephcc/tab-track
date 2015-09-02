@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
-  "key": "kejapkicnmepadkcknbobflnbbhlilfn",
   "name": "Tab Tracker",
+  "key": "pjlloikackppnoiffdfomhjeoejpigoi",
   "description": "Track tab usage",
   "version": "0.1",
   "permissions": [
