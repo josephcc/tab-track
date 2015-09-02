@@ -92,6 +92,9 @@ chrome.tabs.onReplaced.addListener (addedTabId, removedTabId) ->
   trackReplace(removedTabId, addedTabId)
 
 chrome.webNavigation.onCreatedNavigationTarget.addListener (details) ->
-  Logger.debug 'nav: ' + details.sourceTabId + ' -> ' + details.tabId
-  data = new NavInfo({from: details.sourceTabId, to: details.tabId, time: Date.now()})
-  data.save()
+  try
+    Logger.debug 'nav: ' + details.sourceTabId + ' -> ' + details.tabId
+    data = new NavInfo({from: details.sourceTabId, to: details.tabId, time: Date.now()})
+    data.save()
+  catch err
+    console.info(err)

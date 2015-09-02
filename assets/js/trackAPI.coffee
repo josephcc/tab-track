@@ -4,7 +4,8 @@
 #
 ###
 root = exports ? this
-TABSERVER = "https://report-tabs.cmusocial.com" #"http://localhost:8080" TODO set me to the right URL
+#TABSERVER = "https://report-tabs.cmusocial.com" #TODO set me to the right URL
+TABSERVER = "http://localhost:8080"
 
 persistToFile = (filename, csv) ->
   onInitFs = (fs) ->
@@ -149,12 +150,12 @@ root.AppSettings = (() ->
     'setting-trackDomain': true
     'setting-trackURL': true
     'setting-retryInterval': 300000 #TODO reset me to the right retry interval
-    'setting-syncStop': new Date(0)
+    'setting-lastSync': new Date(0)
     'setting-nextSync': Date.now()
     'setting-syncProgress': {}
     'setting-logLevel': {value: 4, name: 'WARN'}
   #Global settings
-  settings = ['userID', 'userSecret', 'trackURL', 'trackDomain', 'logLevel', 'autoSync', 'syncInterval', 'syncStop', 'nextSync', 'syncProgress', 'retryInterval', 'encryptionKey']
+  settings = ['userID', 'userSecret', 'trackURL', 'trackDomain', 'logLevel', 'autoSync', 'syncInterval', 'lastSync', 'nextSync', 'syncProgress', 'retryInterval', 'encryptionKey']
   handlers = {}
   expandedSettings = _.map settings, (itm) -> 'setting-'+itm
   ready = false #Let us know if we are ready yet -- if we already are, go ahead and call any new ready handlers
@@ -236,24 +237,24 @@ checkSync = (item) ->
       }))
     getToken.then (res) ->
       Logger.debug "Token retreival successful"
-      worker.postMessage({cmd: 'sync', token: res.token, syncStop: res.lastSync})
+      worker.postMessage({cmd: 'sync', token: res.token, stopPoints: res.stopPoints})
       worker.addEventListener 'message', (msg) ->
         switch msg.data.cmd
           when 'syncFailed'
             Logger.error "Sync failure #{msg.data.err}"
-            AppSettings.syncProgress = {status: 'failed', err: msg.data.err, lastSuccess: AppSettings.syncStop}
+            AppSettings.syncProgress = {status: 'failed', err: msg.data.err, lastSuccess: AppSettings.lastSync}
             AppSettings.nextSync = Date.now() + AppSettings.retryInterval
           when 'syncStatus'
             AppSettings.syncProgress = {status: 'syncing', total: msg.data.total, stored: msg.data.stored}
-            AppSettings.syncStop = msg.data.stoppedPoint
+            AppSettings.lastSync = Date.now()
             Logger.info "Sync progress #{Math.floor((msg.data.stored / msg.data.total) * 100)} %"
           when 'syncComplete'
             Logger.info "Sync Complete"
             AppSettings.syncProgress = {status: 'complete', time: Date.now()}
-            AppSettings.syncStop = msg.data.stoppedPoint
+            AppSettings.lastSync = Date.now()
             AppSettings.nextSync = Date.now() + AppSettings.syncInterval
     .catch (err) ->
-      AppSettings.syncProgress = {status: 'failed', err: err, lastSuccess: AppSettings.syncStop}
+      AppSettings.syncProgress = {status: 'failed', err: err, lastSuccess: AppSettings.lastSync}
       AppSettings.nextSync = Date.now() + AppSettings.retryInterval
       worker.terminate()
       Logger.error(err)

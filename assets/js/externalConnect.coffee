@@ -18,25 +18,25 @@ chrome.runtime.onMessageExternal.addListener (request, sender, sendResponse) ->
     when "saveID" then AppSettings.userID = request.user
     when "detect" then sendResponse({autoSync: AppSettings.autoSync})
 
-syncConnection = (port, syncStop) ->
+syncConnection = (port) ->
   worker = new Worker('/js/syncer.js')
   worker.addEventListener 'message', (msg) ->
     switch msg.data.cmd
       when 'syncFailed'
         Logger.error "Sync failure #{msg.data.err}"
-        AppSettings.syncProgress = {status: 'failed', err: msg.data.err, lastSuccess: AppSettings.syncStop}
+        AppSettings.syncProgress = {status: 'failed', err: msg.data.err, lastSuccess: AppSettings.lastSync}
         AppSettings.nextSync = Date.now() + AppSettings.retryInterval
         port.postMessage({cmd: 'failure', time: AppSettings.syncProgress.time})
         port.disconnect()
       when 'syncStatus'
         AppSettings.syncProgress = {status: 'syncing', total: msg.data.total, stored: msg.data.stored}
-        AppSettings.syncStop = msg.data.stoppedPoint
+        AppSettings.lastSync = Date.now()
         port.postMessage(_.extend({cmd: 'update'}, AppSettings.syncProgress))
         Logger.info "Sync progress #{Math.floor((msg.data.stored / msg.data.total) * 100)} %"
       when 'syncComplete'
         Logger.info "Sync Complete"
         AppSettings.syncProgress = {status: 'complete', time: Date.now()}
-        AppSettings.syncStop = msg.data.stoppedPoint
+        AppSettings.lastSync = Date.now()
         AppSettings.nextSync = Date.now() + AppSettings.syncInterval
         port.postMessage({cmd: 'complete', time: AppSettings.syncProgress.time})
       else
@@ -45,7 +45,7 @@ syncConnection = (port, syncStop) ->
   port.onMessage.addListener (msg) ->
     switch msg.cmd
       when 'start'
-        worker.postMessage({cmd: 'sync', syncStop: msg.lastSync, external: true})
+        worker.postMessage({cmd: 'sync', stopPoints: msg.stopPoints, external: true})
       when 'syncErr'
         worker.terminate()
         Logger.error(err)
