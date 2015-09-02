@@ -22,8 +22,8 @@ self.onmessage = (msg) ->
 
 performSync = (token, stopPoints, external) ->
   unless external
-    socket = io('http://localhost:8080/sync', {
-    #socket = io('wss://report-tabs.cmusocial.com:8443/sync', {
+    #socket = io('http://localhost:8080/sync', {
+    socket = io('wss://report-tabs.cmusocial.com:8443/sync', {
       transports: ['websocket']
       'query': 'token=' + token
       reconnectionAttempts: 5

@@ -10,10 +10,10 @@
     "storage",
     "unlimitedStorage",
     "webNavigation",
-    "chrome://favicon/"
+    "chrome://favicon/",
+    "*://report-tabs.cmusocial.com/*"
   ],
   "optional_permissions": [
-    "*://report-tabs.cmusocial.com/*",
     "alarms"
   ],
   "externally_connectable": {
