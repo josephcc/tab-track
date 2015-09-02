@@ -61,8 +61,8 @@ takeSnapshot = (action) ->
       Logger.debug saveTabs
 
       tab.save() for tab in saveTabs
-      console.log saveTabs
-      console.log '========== END   SNAPSHOT =========='
+      Logger.debug saveTabs
+      Logger.debug '========== END   SNAPSHOT =========='
 
 trackFocus = (action, windowId, tabId) ->
   Logger.debug 'activated - ' + windowId + ':' + tabId
@@ -106,6 +106,9 @@ chrome.tabs.onReplaced.addListener (addedTabId, removedTabId) ->
   trackReplace(removedTabId, addedTabId)
 
 chrome.webNavigation.onCreatedNavigationTarget.addListener (details) ->
-  Logger.debug 'nav: ' + details.sourceTabId + ' -> ' + details.tabId
-  data = new NavInfo({from: details.sourceTabId, to: details.tabId, time: Date.now()})
-  data.save()
+  try
+    Logger.debug 'nav: ' + details.sourceTabId + ' -> ' + details.tabId
+    data = new NavInfo({from: details.sourceTabId, to: details.tabId, time: Date.now()})
+    data.save()
+  catch err
+    console.info(err)

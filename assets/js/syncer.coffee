@@ -18,15 +18,15 @@ self.onmessage = (msg) ->
     handler(msg.data)
   switch msg.data.cmd
     when 'sync'
-      performSync(msg.data.token, msg.data.syncStop, msg.data.external)
+      performSync(msg.data.token, msg.data.stopPoints, msg.data.external)
 
-performSync = (token, lastStop, external) ->
-  #socket = io('https://report-tabs.cmusocial.com:8080/sync', { TODO set me to the right server
+performSync = (token, stopPoints, external) ->
   unless external
     socket = io('http://localhost:8080/sync', {
+    #socket = io('wss://report-tabs.cmusocial.com:8443/sync', {
+      transports: ['websocket']
       'query': 'token=' + token
       reconnectionAttempts: 5
-      timeout: 10
     })
     socket.on 'error', (err) ->
       reportErr(err)
@@ -37,36 +37,28 @@ performSync = (token, lastStop, external) ->
     else
       socket.emit(dest, message)
 
-  ### Do we need these?
-  socket.on 'reconnect_failed', (err) ->
-    reportErr(err)
-  socket.on 'reconnect_error', (err) ->
-    reportErr(err)
-  socket.on 'connect_error', (err) ->
-    reportErr(err)
-  socket.on 'connect_timeout', (err) ->
-    reportErr(err)
-  ###
-  
+  #Do we need these?
+  socket.on 'reconnect_failed', (err) -> reportErr({message: "Socket.io reconnect failure"})
+
   tables = ['TabInfo', 'FocusInfo', 'NavInfo']
   queries = []
+  console.log(stopPoints)
   for table in tables
-    queries.push(db[table].where('time').aboveOrEqual(lastStop))
+    queries.push(db[table].where('id').above(stopPoints[table]))
   Promise.all(_.map(queries, (q) -> q.count())).then (counts) ->
     stored = _.object(_.map(tables, (t) -> [t, 0]))
     complete = _.object(_.map(tables, (t) -> [t, false]))
-    stoppedPoint = lastStop
     
     storeUpdate = (msg) ->
       stored[msg.type] = msg.packet
-      stoppedPoint = if msg.time > stoppedPoint then msg.time else stoppedPoint
+      stopPoints[msg.type] = msg.id
 
     completeCheck = (msg) ->
       complete[msg.type] = true
       if _.reduce(complete, ((m, v) -> m and v), true)
         socket.disconnect() unless external
         clearInterval(statusUpdateTimeout)
-        self.postMessage({cmd: 'syncComplete', stoppedPoint: msg.time})
+        self.postMessage({cmd: 'syncComplete', stoppedPoint: stopPoints})
         self.close()
 
     if external
@@ -83,7 +75,7 @@ performSync = (token, lastStop, external) ->
 
     #Every 5 seconds, post a message, updating our sync status
     statusUpdateTimeout = setInterval( () ->
-      self.postMessage({cmd: 'syncStatus', total: _.reduce(counts, ((m, n) -> m + n), 0), stored: _.reduce(stored, ((m, v) -> m + v), 0), stoppedPoint: stoppedPoint})
+      self.postMessage({cmd: 'syncStatus', total: _.reduce(counts, ((m, n) -> m + n), 0), stored: _.reduce(stored, ((m, v) -> m + v), 0), stoppedPoint: stopPoints})
     , 3000)
 
     currentStop = Date.now()

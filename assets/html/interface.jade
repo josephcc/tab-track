@@ -31,8 +31,7 @@ html(lang='en')
         p
           | Thank you for participating in the browser tab usage study. Feel free to
           | download your logs if you are interested in the of the data produced from
-          | this study. Additionally, use the second button to control what information
-          | you want sent during the study.
+          | this study. 
         p(style="font-weight: bold")
           | As a reminder, all data in this study is anonymous. Additionally, if you are
           | concerned with us having data for a particular browsing session, this extension
@@ -40,10 +39,10 @@ html(lang='en')
         br
         p
           .row.text-center
-            .col-sm-2
+            .col-sm-3
               button.download.all.btn.btn-lg.btn-success(type='button')
                 | Download your logs
-            .col-sm-3(style="margin-left: 2vw; margin-right: -2vw;")
+            .col-sm-3(style="margin-left: 2vw; margin-right: -2vw; display: none")
               .dropdown.dropdown-lg#urlPerms
                 button.btn.btn-lg.dropdown-toggle(type='button', data-toggle='dropdown')
                   | no URLs, no domains
@@ -58,6 +57,21 @@ html(lang='en')
                   li
                     a.menu-item.addUrl.addDomain(href='#')
                       | URLs and domains
+            .col-sm-3(style="")
+              .dropdown.dropdown-lg#logLevel
+                button.btn.btn-lg.btn-default.dropdown-toggle(type="button", data-toggle='dropdown')
+                  | Console Level: 
+                  span.caret
+                ul.dropdown-menu
+                  li
+                    a.menu-item(href='#', data-level="DEBUG") Debug
+                  li
+                    a.menu-item.info(href='#', data-level="INFO") Info
+                  li
+                    a.menu-item.warn(href='#', data-level="WARN") Warn
+                  li
+                    a.menu-item.error(href='#', data-level="ERROR") Error
+
             .col-sm-3
               button.btn.btn-lg.btn-default#autoUpload(type="button")
                 span.glyphicon.glyphicon-unchecked
@@ -65,7 +79,7 @@ html(lang='en')
             .col-sm-2
               button.btn.btn-lg.render.btn-info(type='button')
                 | Reload Viz
-            .col-sm-2
+            .col-sm-2(style='display:none;')
               button.database.kill.btn.btn-lg.btn-danger(type='button', data-toggle="modal", data-target="#clearModal")
                 | Clear database
       .row
@@ -144,7 +158,8 @@ html(lang='en')
       script(src='/vendor/bootstrap/dist/js/bootstrap.min.js')
       script(src='/vendor/d3/d3.min.js')
       script(src='/vendor/bluebird/js/browser/bluebird.min.js')
-      
+      script(src='/vendor/js-logger/src/logger.min.js')
+
       //Angular Scripts
       script(src="/vendor/underscore/underscore-min.js")
       script(src='/vendor/uri.js/src/URI.min.js')
