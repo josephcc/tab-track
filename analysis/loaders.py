@@ -6,18 +6,20 @@ from operator import *
 from containers import *
 from collections import defaultdict
 
-def loadSnapshot(fn):
-    snapshots = []
-    with open(fn, 'rb') as csvfile:
-        snapshotRows = defaultdict(list)
-        csvreader = csv.reader(csvfile)
-        for row in csvreader:
-            if row[0] == 'snapshotId' or len(row) != 13:
-                continue
-            snapshotRows[row[0]].append(row)
+from pymongo import MongoClient
+from bson.objectid import ObjectId
 
-        for _, rows in snapshotRows.items():
-            snapshots.append(Snapshot(rows))
+DB = MongoClient('localhost', 27017).test
+
+def loadSnapshot(userId):
+    snapshots = []
+    snapshotRows = defaultdict(list)
+
+    for row in DB.tabinfos.find({'user': ObjectId(userId)}).sort('time', 1):
+        snapshotRows[row['snapshotId']].append(row)
+
+    for _, rows in snapshotRows.items():
+        snapshots.append(Snapshot(rows))
 
     snapshots.sort(key=attrgetter('time'))
     for tab in snapshots[0].tabs:
@@ -39,30 +41,23 @@ def loadSnapshot(fn):
         fr.endTime = to.time
     # skip last record because it has no endTime
     snapshots.pop()
+    snapshots = filter(lambda snapshot: len(snapshot) > 0, snapshots)
     return snapshots
 
-def loadFocus(fn):
+def loadFocus(userId):
     focuses = []
-    with open(fn, 'rb') as csvfile:
-        csvreader = csv.reader(csvfile)
-        for row in csvreader:
-            if row[0] == 'action' or len(row) != 4:
-                continue
-            focus = Focus(row)
-            focuses.append(focus)
+    for row in DB.focusinfos.find({'user': ObjectId(userId)}).sort('time', 1):
+        focus = Focus(row)
+        focuses.append(focus)
 
     focuses.sort(key=attrgetter('time'))
     return focuses
 
-def loadNav(fn):
+def loadNav(userId):
     navs = []
-    with open(fn, 'rb') as csvfile:
-        csvreader = csv.reader(csvfile)
-        for row in csvreader:
-            if row[0] == 'from' or len(row) != 3:
-                continue
-            nav = Nav(row)
-            navs.append(nav)
+    for row in DB.navinfos.find({'user': ObjectId(userId)}).sort('time', 1):
+        nav = Nav(row)
+        navs.append(nav)
 
     navs.sort(key=attrgetter('time'))
     return navs
@@ -76,7 +71,7 @@ def _trimByTime(a, s, e):
 
 def _getSnapshotForTime(snapshots, focus):
     index = bisect_left(snapshots, focus)
-    snapshots = snapshots[max(0, index-5) : min(len(snapshots)-1, index+5)]
+    snapshots = snapshots[max(0, index-10) : min(len(snapshots)-1, index+10)]
     snapshots = filter(lambda snapshot: snapshot.hasTab(focus.id), snapshots)
 
     diffs = []
@@ -112,7 +107,6 @@ def addFocusToSnapshots(snapshots, focuses):
             lastFocus = snapshot.focuses[-1]
 
     return snapshots
-
 
 def _getIdxForSnapshot(snapshot, snapshots):
     index = bisect_left(snapshots, time)
@@ -156,13 +150,14 @@ def addNavToSnapshots(snapshots, navs):
                     break
                 snapshot.findTab(nav.target).tabSource = fr
 
-def loadEverything(snapshotFn, focusFn, navFn):
+def loadEverything(userId):
+
     print >> sys.stderr, 'Loading tab logs...',
-    snapshots = loadSnapshot(snapshotFn)
+    snapshots = loadSnapshot(userId)
     print >> sys.stderr, ' Done\nLoading focus logs...',
-    focuses = loadFocus(focusFn)
+    focuses = loadFocus(userId)
     print >> sys.stderr, ' Done\nLoading nav logs...',
-    navs = loadNav(navFn)
+    navs = loadNav(userId)
     print >> sys.stderr, ' Done'
 
     print >> sys.stderr, 'Mapping focus to snapshots...',

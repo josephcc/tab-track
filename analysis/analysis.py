@@ -11,11 +11,11 @@ from containers import *
 
 
 def init():
-    if len(sys.argv) in (4,5):
-        snapshots, focuses, navs = loadEverything(*sys.argv[1:4])
-        if len(sys.argv) == 5:
+    if len(sys.argv) in (2,3):
+        snapshots, focuses, navs = loadEverything(sys.argv[1])
+        if len(sys.argv) == 3:
             print >> sys.stderr, 'Writing snapshot to file...',
-            fp = open(sys.argv[4], 'wb')
+            fp = open(sys.argv[2], 'wb')
             pickle.dump(snapshots, fp, -1)
             fp.close()
             print >> sys.stderr, ' Done'
@@ -66,13 +66,11 @@ def tabHours(snapshots):
             
     return active, tabTime, maxCount, tabHisto, domainTime, directBranching, indirectBranching, maxWinCount, windowHisto
 
-# TODO double check search url patterns
-def searches(snapshots, domain='google.com'):
+def searches(snapshots):
     count = 0
     for snapshot in snapshots:
         tabs = filter(lambda tab: tab.init, snapshot.tabs)
-        tabs = filter(lambda tab: domain in tab.domain, tabs)
-        tabs = filter(lambda tab: 'search' in tab.url, tabs)
+        tabs = filter(lambda tab: tab.query != None, tabs)
         count += len(tabs)
 
         snapshot.searchInit = len(tabs) > 0
@@ -85,15 +83,14 @@ def printDeltaHisto(histo, label):
         print line.encode('utf8')
 
 def main():
-
     snapshots = init()
     try:
         pass
     except Exception as e:
         print '\nUsage:'
-        print '\tpython analysis.py tabLogs.csv focusLogs.csv navLogs.csv'
-        print '\tpython analysis.py tabLogs.csv focusLogs.csv navLogs.csv snapshots.pickle'
-        print '\tpython analysis.py snapshots.pickle\n'
+        print '\tpython analysis.py userId'
+        print '\tpython analysis.py userId userId.pickle'
+        print '\tpython analysis.py userId.pickle\n'
         t, v, tb = sys.exc_info()
         raise t, v, tb
         sys.exit()
@@ -117,7 +114,8 @@ def main():
     print 'Max number of windows:\t', maxWinCount
     print 'Average number of tabs:\t', tab.total_seconds() / active.total_seconds()
     print 'Number of searches:\t', searchCount
-    print '1 search every:\t\t', active.total_seconds() / searchCount, 'seconds'
+    if searchCount != 0:
+        print '1 search every:\t\t', active.total_seconds() / searchCount, 'seconds'
 
     print '-' * 44
 
