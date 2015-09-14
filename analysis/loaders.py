@@ -140,6 +140,9 @@ def addNavToSnapshots(snapshots, navs):
         snapshot, fr, to  = _getTabForIdTime(nav.source, nav.target, nav.time, snapshots)
         if to != None and fr != None:
             to.source = fr
+            if not hasattr(fr, 'targets'):
+                fr.targets = []
+            fr.targets.append(to)
             # propagate source info to future snapshots
             snapshotIdx = next(ifilter(lambda x: x[1].snapshotId == snapshot.snapshotId, enumerate(snapshots)))[0]
             for idx in range(snapshotIdx, len(snapshots)):
@@ -148,7 +151,11 @@ def addNavToSnapshots(snapshots, navs):
                 #if (not snapshot.hasTab(nav.target)) or snapshot.findTab(nav.target).init:
                 if (not snapshot.hasTab(nav.target)):
                     break
-                snapshot.findTab(nav.target).tabSource = fr
+                future_to = snapshot.findTab(nav.target)
+                future_to.tabSource = fr
+                if not hasattr(fr, 'tabTargets'):
+                    fr.tabTargets = []
+                fr.tabTargets.append(future_to)
 
 def loadEverything(userId):
 
