@@ -36,6 +36,28 @@ class Tab:
         if self.query != None:
             self.query = self.query.split(' ')
 
+    def toDictionary(self):
+        tab = {}
+        tab['snapshotId']  = self.snapshotId
+        tab['windowId']    = self.windowId
+        tab['tabId']       = self.id
+        tab['openerTabId'] = self.openerTabId
+        tab['index']       = self.index
+        tab['status']      = self.status
+        tab['action']      = self.snapshotAction
+        tab['domainHash']  = self.domain
+        tab['urlHash']     = self.url
+        tab['domainHash']  = self.domainHash
+        tab['urlHash']     = self.urlHash
+        tab['favIconUrl']  = self.favIconUrl
+        tab['time']        = self.time
+        tab['query']       = self.query
+        if hasattr(self, 'targets'):
+            tab['targets'] = [target.toDictionary() for target in self.targets]
+        if hasattr(self, 'init'):
+            tab['init'] = self.init
+        return tab
+
     def directSource(self):
         if hasattr(self, 'source') and self.source != None:
             return self.source
