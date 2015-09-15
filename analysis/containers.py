@@ -53,10 +53,19 @@ class Tab:
         tab['time']        = self.time
         tab['query']       = self.query
         if hasattr(self, 'targets'):
-            tab['targets'] = [target.toDictionary() for target in self.targets]
+            tab['targets'] = [target.toReference() for target in self.targets]
+        if hasattr(self, 'tabTargets'):
+            tab['tabTargets'] = [target.toReference() for target in self.tabTargets]
+        if hasattr(self, 'source'):
+            tab['source'] = self.source.toReference()
+        if hasattr(self, 'tabSource'):
+            tab['tabSource'] = self.tabSource.toReference()
         if hasattr(self, 'init'):
             tab['init'] = self.init
         return tab
+
+    def toReference(self):
+        return (self.snapshotId, self.id)
 
     def directSource(self):
         if hasattr(self, 'source') and self.source != None:

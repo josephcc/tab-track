@@ -37,6 +37,7 @@ def main():
             if tab.query != None and tab.query != []:
                 query = [c.decrypt(query, key) for query in tab.query]
                 print '  ', '\t'.join(query)
+            print tab.toDictionary()
 
     node.terminate()
     node.kill()
