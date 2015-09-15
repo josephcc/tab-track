@@ -1,6 +1,7 @@
 import sys
 import csv
 from itertools import *
+from functools import *
 from bisect import *
 from operator import *
 from containers import *
@@ -158,7 +159,6 @@ def addNavToSnapshots(snapshots, navs):
                 fr.tabTargets.append(future_to)
 
 def loadEverything(userId):
-
     print >> sys.stderr, 'Loading tab logs...',
     snapshots = loadSnapshot(userId)
     print >> sys.stderr, ' Done\nLoading focus logs...',
@@ -174,4 +174,21 @@ def loadEverything(userId):
     print >> sys.stderr, ' Done'
 
     return snapshots, focuses, navs
+
+def buildTabSession(snapshots, sid, tab):
+    focuses = snapshots[sid].focuses[:]
+    sid = sid + 1
+    while sid < len(snapshots) - 1 and snapshots[sid].hasTab(tab.id) and snapshots[sid].findTab(tab.id).init != True:
+        focuses += snapshots[sid].focuses[:]
+        sid = sid + 1
+    endTime = snapshots[sid].time
+    return TabSession(tab, focuses, endTime)
+
+def extractTabSessions(snapshots):
+    tabSessions = []
+    for sid in range(len(snapshots)):
+        initTabs = filter(attrgetter('init'), snapshots[sid].tabs)
+        sessions = map(partial(buildTabSession, snapshots, sid), initTabs)
+        tabSessions += sessions
+    return tabSessions
 
