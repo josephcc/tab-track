@@ -12,11 +12,11 @@ from users import users
 
 
 def isFromSearch(tab):
-    if len(tab.tab.indirectSources()) == 0:
+    if len(tab.tab.indirectTabSources()) == 0:
         return tab.tab.isSearch()
     if tab.tab.isSearch():
         return tab.tab.isSearch()
-    return reduce(or_, map(methodcaller('isSearch'), tab.tab.indirectSources()))
+    return reduce(or_, map(methodcaller('isSearch'), tab.tab.indirectTabSources()))
 
 def getTabSessions(user):
     snapshots, focuses, navs = loadEverything(user)
@@ -62,6 +62,7 @@ def analysis(user):
         print >> sys.stderr, 'Average revisitations per "tab":', sum(revisitations) / float(len(revisitations))
         print >> sys.stderr, 'Revisitation dist:\n', Counter(revisitations).most_common()
 
+        stats['duration'].append(duration)
         stats['queue'].append(perc2(queueDuration, duration))
         stats['read'].append(perc2(readingDuration, duration))
         stats['bg'].append(perc2(backgroundDuration, duration))
@@ -71,7 +72,8 @@ def analysis(user):
 
     print user, '\t', 
     print logDuration, '\t', logDuration.total_seconds(), '\t',
-    print duration, '\t', duration.total_seconds(), '\t',
+    print stats['duration'][0], '\t', stats['duration'][0].total_seconds(), '\t',
+    print stats['duration'][1], '\t', stats['duration'][1].total_seconds(), '\t',
     for key in ['queue', 'read', 'bg', 'obsolete', 'revisitation']:
         print stats[key][0] - stats[key][1], '\t',
     print

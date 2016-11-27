@@ -1,0 +1,11 @@
+
+Time analysis for 55f2270a00823a5906ab727f
+
+Tab time:	15 days, 5:31:28.700000
+Queue time:	2:40:04.891000 0.73%
+Read time:	23:52:50.393000 6.53%
+BG time:	0:11:27.956000 0.05%
+Obsolte time:	14 days, 2:47:05.460000 92.68%
+Average revisitations per "tab": 0.0618892508143
+Revisitation dist:
+[(0, 299), (1, 4), (5, 2), (2, 1), (3, 1)]

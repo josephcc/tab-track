@@ -12,11 +12,9 @@ from users import users
 
 
 def isFromSearch(tab):
-    if len(tab.tab.indirectSources()) == 0:
-        return tab.tab.isSearch()
-    if tab.tab.isSearch():
-        return tab.tab.isSearch()
-    return reduce(or_, map(methodcaller('isSearch'), tab.tab.indirectSources()))
+    if tab.tab.isSearch() or (tab.tab.directSource() != None and tab.tab.directSource().isSearch()):
+        return True
+    return False
 
 def getTabSessions(user):
     snapshots, focuses, navs = loadEverything(user)

@@ -178,6 +178,8 @@ def loadEverything(userId):
 def buildTabSession(snapshots, sid, tab):
     focuses = snapshots[sid].focuses[:]
     sid = sid + 1
+    if sid >= len(snapshots):
+        return None
     while sid < len(snapshots) - 1 and snapshots[sid].hasTab(tab.id) and snapshots[sid].findTab(tab.id).init != True:
         focuses += snapshots[sid].focuses[:]
         sid = sid + 1
@@ -189,6 +191,7 @@ def extractTabSessions(snapshots):
     for sid in range(len(snapshots)):
         initTabs = filter(attrgetter('init'), snapshots[sid].tabs)
         sessions = map(partial(buildTabSession, snapshots, sid), initTabs)
+        sessions = filter(lambda x: x!= None, sessions)
         tabSessions += sessions
     return tabSessions
 

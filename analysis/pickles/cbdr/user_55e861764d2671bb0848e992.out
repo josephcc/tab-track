@@ -1,0 +1,53 @@
+--------------------------------------------
+Log duration:		2:03:36.646000 2015-09-03 17:08:03.383000 2015-09-03 15:04:26.737000
+Active duration:	0:26:09.947000
+Active ratio:		21.17%
+Tab duration:		1:43:37.928000
+Max number of tabs:	7
+Max number of windows:	1
+Average number of tabs:	3.96059739596
+Number of searches:	15
+1 search every:		104.663133333 seconds
+--------------------------------------------
+Active % / Tab count
+###############################################################################
+                                                                        0.24  7
+                                                                         0.0  6
+                                                                        0.07  5
+█████████████████████████████████████████████████████████████████████  94.98  4
+███                                                                     4.72  3
+                                                                         0.0  2
+                                                                         0.0  1
+--------------------------------------------
+Active % / Tab count
+###############################################################################
+█████████████████████████████████████████████████████████████████████  100.0  1
+--------------------------------------------
+Active % / Domain
+###################################################################################################################################################
+██████████████████████████████████████████████████  94.41  U2FsdGVkX1+pFFbvNo9onjp5WBQxqkdmXWMoaVNz6Dw=                                            
+█                                                    2.35  U2FsdGVkX1+wwL3yreVSyjfu2WTenPCYbX8/FgeUFdU=                                            
+                                                     0.88  U2FsdGVkX1//LG4JsZS49HHrRzKhS9XOG441nErUnXI=                                            
+                                                     0.54  U2FsdGVkX19FkmFGBRZH4em+ZF1gUcN/+OcYWQH139U=                                            
+                                                     0.54  U2FsdGVkX1+6vDv8wNleVbmPa582tLJRQpwNk0xs7Ug=                                            
+                                                     0.52  U2FsdGVkX19ht2ekHyczThiv3SYTnqtPCipR9R1rzx8=                                            
+                                                     0.39  U2FsdGVkX18OwvjllqxVAlUyZjogmdxt7PEePjqiL9U=                                            
+                                                     0.24  U2FsdGVkX19CyRyDz+3ly7msXyx8TrWOI5GVUo1rCRN2lOcnQLPMg+5c0czXxP1A                        
+                                                     0.07  U2FsdGVkX1/7AadpUi8pTLU7dn7YcIyn7737VvyqfKQ=                                            
+                                                     0.04  U2FsdGVkX184Y73WcYCvxOfJ1U5E7HYFsfWjQwYZF4g=                                            
+                                                     0.01  U2FsdGVkX1+31LGLC9lYdXTPzCuZAb6YJwFSKJPQr90z9btg1l2R1WlqJ00AVUQzk/fCJuHl7imix7h+FU7ZAQ==
+--------------------------------------------
+Direct branching count / Domain
+#####################################################################################################
+██████████████████████████████████████████████████  2.0  U2FsdGVkX1+d7LllpZT5nbSjxvPswTjSqwtfFd65Yq8=
+█████████████████████████                           1.0  U2FsdGVkX19Us+gMnDnvDN5FoKfKm8Z/XLq1j8myaTQ=
+█████████████████████████                           1.0  U2FsdGVkX18aW926TyUGWTBV5tprUHBK15+AsUihKDs=
+█████████████████████████                           1.0  U2FsdGVkX1/HH/zWCWxQEi7Oag3fhuLsjgtNis7Pr3M=
+--------------------------------------------
+Indirect branching count / Domain
+#####################################################################################################
+██████████████████████████████████████████████████  2.0  U2FsdGVkX1+d7LllpZT5nbSjxvPswTjSqwtfFd65Yq8=
+█████████████████████████                           1.0  U2FsdGVkX19Us+gMnDnvDN5FoKfKm8Z/XLq1j8myaTQ=
+█████████████████████████                           1.0  U2FsdGVkX18aW926TyUGWTBV5tprUHBK15+AsUihKDs=
+█████████████████████████                           1.0  U2FsdGVkX1/HH/zWCWxQEi7Oag3fhuLsjgtNis7Pr3M=
+--------------------------------------------

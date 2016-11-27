@@ -1,0 +1,68 @@
+--------------------------------------------
+Log duration:		6 days, 9:27:53.836000 2015-09-10 00:28:24.766000 2015-09-03 15:00:30.930000
+Active duration:	4:45:52.823000
+Active ratio:		3.10%
+Tab duration:		14:10:55.789000
+Max number of tabs:	7
+Max number of windows:	2
+Average number of tabs:	2.97652398092
+Number of searches:	94
+1 search every:		182.476840426 seconds
+--------------------------------------------
+Active % / Tab count
+###############################################################################
+██████████████                                                         11.18  7
+█████████                                                               7.01  6
+██                                                                      1.81  5
+█████                                                                   4.31  4
+████████████████                                                       11.94  3
+█████████████████████████████████████████████████████████████████████  51.49  2
+████████████████                                                       12.27  1
+--------------------------------------------
+Active % / Tab count
+###############################################################################
+                                                                         0.0  2
+█████████████████████████████████████████████████████████████████████  100.0  1
+--------------------------------------------
+Active % / Domain
+###########################################################################################################################
+██████████████████████████████████████████████████  20.83  U2FsdGVkX1/g/K08v/A/Pj7H1HXABiy5ys+VmzrmV0A=                    
+█████████████████████████                           10.83  U2FsdGVkX1/P1O+vScrd3UX0e47pu/3JsMqhT9Q4WMA=                    
+████████████████████                                 8.35  U2FsdGVkX185tBncPNO8lbH7pbDrCwIe9D8o+MdX1dc=                    
+██████████████                                       5.93  U2FsdGVkX1/wb6RArEKplvjEMr0WdPZdZ9LPOMo2BdM=                    
+████████████                                         5.26  U2FsdGVkX1/v0WoLQxjohzqSCqb5st4Nm4t+DqfBndJF/TnaDn/z+ZvTHs0KJEYj
+█████████                                             3.9  U2FsdGVkX1938aXhqzWlR7E2g5sSuGy3te/u2QA+IvE=                    
+████████                                             3.59  U2FsdGVkX1+QzH9xFuEFYAot8lfdhAkrTp/5hfCBEQ28UNA/HaHvOMSs1ozfNMUd
+█████                                                2.45  U2FsdGVkX18pnkf3N3PImTx3cn8Hf94840xyQclEfCs=                    
+████                                                 1.72  U2FsdGVkX1+s5YdbJtT/nFWrU9h6ChQMZXDsCxCD6sU=                    
+████                                                 1.69  U2FsdGVkX1/NzQbwsaM19hP5L3JLkqPV3fH6LeJiWyI=                    
+███                                                  1.59  U2FsdGVkX18uy9UWq1sOv/Oo3+w0p8a2jwjZ+m0eux4=                    
+--------------------------------------------
+Direct branching count / Domain
+#####################################################################################################
+██████████████████████████████████████████████████  1.0  U2FsdGVkX1/UNkF4Cri5KiqTW61al3ZzVuXEiMS6Svc=
+██████████████████████████████████████████████████  1.0  U2FsdGVkX18qKgzCqk21lw2UGFGUrbiQGO8Pka0Q5Lw=
+██████████████████████████████████████████████████  1.0  U2FsdGVkX1/HpieAbG9/+FE1dj2Zx62hD1CmR28m298=
+██████████████████████████████████████████████████  1.0  U2FsdGVkX19377/q43KubOluldjldjepVL3rhNvTESE=
+██████████████████████████████████████████████████  1.0  U2FsdGVkX19ocnSyJdN3CEbGhnE6N8F8fJTrLABxyQc=
+██████████████████████████████████████████████████  1.0  U2FsdGVkX19cyi1VUvvYQHw3qw7RHR5YD6NiGn+Ch2U=
+██████████████████████████████████████████████████  1.0  U2FsdGVkX18vEojuMC6JrHtm4uFGt82U2yPPrpTJOwM=
+██████████████████████████████████████████████████  1.0  U2FsdGVkX1+q/0qQcL0c6LZKt28m796PCTlj1tAWwjo=
+██████████████████████████████████████████████████  1.0  U2FsdGVkX19fSXK5JpE52Ei5XaFN2Qpl6WAUi7VGV6w=
+██████████████████████████████████████████████████  1.0  U2FsdGVkX1/CQsbpj9HezSV9N3ivRCf4mEEcf0ZAVTU=
+██████████████████████████████████████████████████  1.0  U2FsdGVkX1+M8x+4LAPK3ldCUJMhqIypq4L+s1aH6hw=
+--------------------------------------------
+Indirect branching count / Domain
+#####################################################################################################
+██████████████████████████████████████████████████  1.0  U2FsdGVkX1/UNkF4Cri5KiqTW61al3ZzVuXEiMS6Svc=
+██████████████████████████████████████████████████  1.0  U2FsdGVkX18qKgzCqk21lw2UGFGUrbiQGO8Pka0Q5Lw=
+██████████████████████████████████████████████████  1.0  U2FsdGVkX1/HpieAbG9/+FE1dj2Zx62hD1CmR28m298=
+██████████████████████████████████████████████████  1.0  U2FsdGVkX19377/q43KubOluldjldjepVL3rhNvTESE=
+██████████████████████████████████████████████████  1.0  U2FsdGVkX19ocnSyJdN3CEbGhnE6N8F8fJTrLABxyQc=
+██████████████████████████████████████████████████  1.0  U2FsdGVkX19cyi1VUvvYQHw3qw7RHR5YD6NiGn+Ch2U=
+██████████████████████████████████████████████████  1.0  U2FsdGVkX18vEojuMC6JrHtm4uFGt82U2yPPrpTJOwM=
+██████████████████████████████████████████████████  1.0  U2FsdGVkX1+q/0qQcL0c6LZKt28m796PCTlj1tAWwjo=
+██████████████████████████████████████████████████  1.0  U2FsdGVkX19fSXK5JpE52Ei5XaFN2Qpl6WAUi7VGV6w=
+██████████████████████████████████████████████████  1.0  U2FsdGVkX1/CQsbpj9HezSV9N3ivRCf4mEEcf0ZAVTU=
+██████████████████████████████████████████████████  1.0  U2FsdGVkX1+M8x+4LAPK3ldCUJMhqIypq4L+s1aH6hw=
+--------------------------------------------

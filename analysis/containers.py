@@ -77,6 +77,17 @@ class Tab:
             return [self.directSource()] + self.directSource().indirectSources()
         return []
 
+
+    def directTabSource(self):
+        if hasattr(self, 'tabSource') and self.tabSource != None:
+            return self.tabSource
+        return None
+
+    def indirectTabSources(self):
+        if hasattr(self, 'tabSource') and self.tabSource != None:
+            return [self.directTabSource()] + self.directTabSource().indirectTabSources()
+        return []
+
     def __repr__(self):
         source = ''
         if hasattr(self, 'source') and self.source != None:
@@ -99,6 +110,9 @@ class Tab:
         else:
             domain = self.domain
         return domain
+
+    def isSearch(self):
+        return self.query != None and len(self.query) > 0
 
 class Focus:
     def __init__(self, row):
